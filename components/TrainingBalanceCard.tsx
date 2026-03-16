@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Colors } from '@/constants/theme';
-import { WORKOUT_META, Workout, WorkoutType } from '@/constants/workouts';
+import { WORKOUT_META, WorkoutType } from '@/constants/workouts';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 type BalanceEntry = {
@@ -25,22 +25,25 @@ export function TrainingBalanceCard() {
 
   return (
     <View style={styles.container}>
-      {counts.map(({ type, count }) => {
+      {WEEKLY_BALANCE_MOCK.map(({ type, minutes }) => {
         const meta = WORKOUT_META[type];
-        const widthPct = (count / total) * 100;
+        const widthPct = totalMinutes > 0 ? (minutes / totalMinutes) * 100 : 0;
+
         return (
           <View key={type} style={styles.row}>
-            <View style={styles.left}>
-              <View style={[styles.dot, { backgroundColor: meta.color }]} />
-              <Text style={[styles.label, { color: palette.text }]}>{meta.label}</Text>
-              <Text style={[styles.count, { color: palette.mutedText }]}>{count}</Text>
+            <View style={styles.rowHeader}>
+              <View style={styles.rowLeft}>
+                <View style={[styles.dot, { backgroundColor: meta.color }]} />
+                <Text style={[styles.label, { color: palette.text }]}>{meta.label}</Text>
+              </View>
+              <Text style={[styles.value, { color: palette.mutedText }]}>{minutes} min</Text>
             </View>
             <View style={[styles.track, { backgroundColor: palette.surfaceMuted }]}>
               <View style={[styles.fill, { backgroundColor: meta.color, width: `${Math.max(widthPct, 8)}%` }]} />
             </View>
-          );
-        })}
-      </View>
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -49,58 +52,7 @@ const styles = StyleSheet.create({
   container: {
     gap: 12,
   },
-  title: {
-    fontSize: 18,
-    fontWeight: '800',
-    letterSpacing: -0.3,
-  },
-  subtitle: {
-    marginTop: 4,
-    marginBottom: 14,
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  segmentRail: {
-    height: 12,
-    borderRadius: 999,
-    overflow: 'hidden',
-    flexDirection: 'row',
-    marginBottom: 16,
-  },
-  segment: {
-    height: '100%',
-  },
-  rows: {
-    gap: 11,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  score: {
-    fontSize: 24,
-    fontWeight: '800',
-    letterSpacing: -0.4,
-  },
-  subtitle: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  segmentTrack: {
-    height: 12,
-    borderRadius: 999,
-    overflow: 'hidden',
-    flexDirection: 'row',
-  },
-  segment: {
-    height: '100%',
-  },
-  rows: {
+  row: {
     gap: 8,
   },
   rowHeader: {
@@ -108,19 +60,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  labelWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   rowLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
-  emoji: {
-    fontSize: 14,
-    fontWeight: '700',
-    textTransform: 'capitalize',
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 999,
   },
   label: {
     fontSize: 14,
