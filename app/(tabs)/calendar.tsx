@@ -1,13 +1,5 @@
 import { useMemo, useState } from 'react';
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -547,6 +539,7 @@ const styles = StyleSheet.create({
   },
   workoutActions: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
     marginTop: 2,
   },
@@ -572,4 +565,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
   },
+  legendEmoji: { fontSize: 13 },
+  legendText: { color: '#EADFFE', fontSize: 12, fontWeight: '700' },
 });
