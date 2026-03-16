@@ -4,22 +4,24 @@ import { Colors } from '@/constants/theme';
 import { WORKOUT_META, Workout, WorkoutType } from '@/constants/workouts';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
-type Props = {
-  workouts: Workout[];
+type BalanceEntry = {
+  type: WorkoutType;
+  minutes: number;
 };
 
-const TRACKED_TYPES: WorkoutType[] = ['run', 'tennis', 'gym', 'mobility'];
+const WEEKLY_BALANCE_MOCK: BalanceEntry[] = [
+  { type: 'run', minutes: 138 },
+  { type: 'tennis', minutes: 92 },
+  { type: 'gym', minutes: 116 },
+  { type: 'mobility', minutes: 74 },
+  { type: 'rest', minutes: 60 },
+];
 
-export function TrainingBalanceCard({ workouts }: Props) {
+export function TrainingBalanceCard() {
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
 
-  const counts = TRACKED_TYPES.map((type) => ({
-    type,
-    count: workouts.filter((workout) => workout.type === type).length,
-  }));
-
-  const total = counts.reduce((sum, item) => sum + item.count, 0) || 1;
+  const totalMinutes = WEEKLY_BALANCE_MOCK.reduce((sum, item) => sum + item.minutes, 0);
 
   return (
     <View style={styles.container}>
@@ -36,9 +38,9 @@ export function TrainingBalanceCard({ workouts }: Props) {
             <View style={[styles.track, { backgroundColor: palette.surfaceMuted }]}>
               <View style={[styles.fill, { backgroundColor: meta.color, width: `${Math.max(widthPct, 8)}%` }]} />
             </View>
-          </View>
-        );
-      })}
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -47,28 +49,86 @@ const styles = StyleSheet.create({
   container: {
     gap: 12,
   },
-  row: {
+  title: {
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: -0.3,
+  },
+  subtitle: {
+    marginTop: 4,
+    marginBottom: 14,
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  segmentRail: {
+    height: 12,
+    borderRadius: 999,
+    overflow: 'hidden',
+    flexDirection: 'row',
+    marginBottom: 16,
+  },
+  segment: {
+    height: '100%',
+  },
+  rows: {
+    gap: 11,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  score: {
+    fontSize: 24,
+    fontWeight: '800',
+    letterSpacing: -0.4,
+  },
+  subtitle: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  segmentTrack: {
+    height: 12,
+    borderRadius: 999,
+    overflow: 'hidden',
+    flexDirection: 'row',
+  },
+  segment: {
+    height: '100%',
+  },
+  rows: {
     gap: 8,
   },
-  left: {
+  rowHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  labelWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
   },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 999,
+  rowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
-  label: {
+  emoji: {
     fontSize: 14,
     fontWeight: '700',
     textTransform: 'capitalize',
   },
-  count: {
+  label: {
     fontSize: 14,
     fontWeight: '700',
-    marginLeft: 'auto',
+  },
+  value: {
+    fontSize: 12,
+    fontWeight: '700',
   },
   track: {
     height: 9,
