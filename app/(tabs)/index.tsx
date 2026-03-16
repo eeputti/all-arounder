@@ -7,6 +7,15 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 
 const TRACKED: WorkoutType[] = ['run', 'tennis', 'gym', 'mobility'];
 
+const trainingBalance = [
+  { sport: 'run', minutes: 150, color: '#5e9cff' },
+  { sport: 'tennis', minutes: 120, color: '#30d158' },
+  { sport: 'gym', minutes: 110, color: '#ff9f0a' },
+  { sport: 'mobility', minutes: 80, color: '#bf5af2' },
+];
+
+const totalMinutes = trainingBalance.reduce((total, entry) => total + entry.minutes, 0);
+
 export default function HomeScreen() {
   const scheme = useColorScheme() ?? 'light';
   const dark = scheme === 'dark';
@@ -41,15 +50,44 @@ export default function HomeScreen() {
         )}
       </SectionCard>
 
-      <SectionCard title="Upcoming" subtitle="next sessions">
-        {upcomingWorkouts.map((workout) => (
-          <View key={workout.id} style={styles.upcomingRow}>
-            <Text style={[styles.upcomingDate, { color: dark ? '#A3A9B9' : '#687087' }]}>{workout.date.slice(5)}</Text>
-            <Text style={[styles.upcomingType, { color: WORKOUT_META[workout.type].color }]}>{WORKOUT_META[workout.type].label}</Text>
-            <Text style={[styles.upcomingMeta, { color: dark ? '#CDD2E2' : '#32384D' }]}>{workout.duration || 0} min</Text>
-          </View>
-        ))}
-      </SectionCard>
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>training balance</Text>
+        <Text style={styles.balanceSubtitle}>Minutes by sport this week</Text>
+
+        <View style={styles.balanceRows}>
+          {trainingBalance.map((entry) => {
+            const percent = Math.round((entry.minutes / totalMinutes) * 100);
+
+            return (
+              <View key={entry.sport} style={styles.balanceRow}>
+                <View style={styles.balanceHeader}>
+                  <Text style={styles.balanceLabel}>{entry.sport}</Text>
+                  <Text style={styles.balanceValue}>
+                    {entry.minutes} min · {percent}%
+                  </Text>
+                </View>
+
+                <View style={styles.balanceTrack}>
+                  <View
+                    style={[
+                      styles.balanceFill,
+                      {
+                        width: `${percent}%`,
+                        backgroundColor: entry.color,
+                      },
+                    ]}
+                  />
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={styles.actionsRow}>
+        <Pressable style={styles.button}>
+          <Text style={styles.buttonText}>add run</Text>
+        </Pressable>
 
       <SectionCard title="Weekly Training Balance" subtitle="distribution by sport">
         <TrainingBalanceCard workouts={MOCK_WORKOUTS.slice(-7)} />
@@ -111,13 +149,43 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     flex: 1,
   },
-  upcomingMeta: {
-    fontSize: 13,
-    fontWeight: '600',
+  balanceSubtitle: {
+    color: '#8e8e93',
+    fontSize: 14,
+    marginBottom: 16,
   },
-  chipWrap: {
+  balanceRows: {
+    gap: 12,
+  },
+  balanceRow: {
+    gap: 8,
+  },
+  balanceHeader: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  balanceLabel: {
+    color: '#ffffff',
+    fontSize: 15,
+    textTransform: 'capitalize',
+  },
+  balanceValue: {
+    color: '#d1d1d6',
+    fontSize: 14,
+  },
+  balanceTrack: {
+    width: '100%',
+    height: 10,
+    backgroundColor: '#2c2c2e',
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
+  balanceFill: {
+    height: '100%',
+    borderRadius: 999,
+  },
+  actionsRow: {
     gap: 10,
   },
   chip: {
