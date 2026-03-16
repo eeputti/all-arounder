@@ -1,6 +1,7 @@
 import { PropsWithChildren } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 type SectionCardProps = PropsWithChildren<{
@@ -10,17 +11,21 @@ type SectionCardProps = PropsWithChildren<{
 
 export function SectionCard({ title, subtitle, children }: SectionCardProps) {
   const scheme = useColorScheme() ?? 'light';
-  const dark = scheme === 'dark';
+  const palette = Colors[scheme];
 
   return (
     <View
       style={[
         styles.card,
-        { backgroundColor: dark ? '#17181C' : '#FFFFFF', borderColor: dark ? '#23262D' : '#E8E8EF' },
+        {
+          backgroundColor: palette.card,
+          borderColor: palette.cardBorder,
+          shadowColor: palette.cardShadow,
+        },
       ]}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: dark ? '#FAFAFC' : '#12131A' }]}>{title}</Text>
-        {subtitle ? <Text style={[styles.subtitle, { color: dark ? '#A6A8B3' : '#6A6D79' }]}>{subtitle}</Text> : null}
+        <Text style={[styles.title, { color: palette.text }]}>{title}</Text>
+        {subtitle ? <Text style={[styles.subtitle, { color: palette.mutedText }]}>{subtitle}</Text> : null}
       </View>
       {children}
     </View>
@@ -30,20 +35,25 @@ export function SectionCard({ title, subtitle, children }: SectionCardProps) {
 const styles = StyleSheet.create({
   card: {
     borderWidth: 1,
-    borderRadius: 22,
-    padding: 16,
+    borderRadius: 20,
+    padding: 18,
     marginBottom: 14,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.16,
+    shadowRadius: 18,
+    elevation: 3,
   },
   header: {
     marginBottom: 14,
-    gap: 3,
+    gap: 4,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: -0.35,
   },
   subtitle: {
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: '600',
   },
 });

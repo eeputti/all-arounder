@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { WORKOUT_META, WorkoutType } from '@/constants/workouts';
+import { Colors } from '@/constants/theme';
+import { WORKOUT_META, Workout, WorkoutType } from '@/constants/workouts';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 type BalanceEntry = {
@@ -18,54 +19,24 @@ const WEEKLY_BALANCE_MOCK: BalanceEntry[] = [
 
 export function TrainingBalanceCard() {
   const scheme = useColorScheme() ?? 'light';
-  const dark = scheme === 'dark';
+  const palette = Colors[scheme];
 
   const totalMinutes = WEEKLY_BALANCE_MOCK.reduce((sum, item) => sum + item.minutes, 0);
 
   return (
-    <View style={[styles.shell, { backgroundColor: dark ? '#12141C' : '#F8F9FF', borderColor: dark ? '#282C38' : '#E7EAF5' }]}>
-      <Text style={[styles.title, { color: dark ? '#F5F7FF' : '#151729' }]}>Weekly training balance</Text>
-      <Text style={[styles.subtitle, { color: dark ? '#A8B0C6' : '#67708A' }]}>How your movement was distributed this week</Text>
-
-      <View style={[styles.segmentRail, { backgroundColor: dark ? '#1D2130' : '#EBEEF9' }]}>
-        {WEEKLY_BALANCE_MOCK.map((item) => {
-          const width = `${Math.max(6, (item.minutes / totalMinutes) * 100)}%`;
-          return (
-            <View
-              key={item.type}
-              style={[
-                styles.segment,
-                {
-                  width,
-                  backgroundColor: WORKOUT_META[item.type].color,
-                },
-              ]}
-            />
-          );
-        })}
-      </View>
-
-      <View style={styles.rows}>
-        {WEEKLY_BALANCE_MOCK.map((item) => {
-          const meta = WORKOUT_META[item.type];
-          const percent = Math.round((item.minutes / totalMinutes) * 100);
-
-          return (
-            <View key={item.type} style={styles.row}>
-              <View style={styles.rowHeader}>
-                <View style={styles.labelWrap}>
-                  <View style={[styles.dot, { backgroundColor: meta.color }]} />
-                  <Text style={[styles.label, { color: dark ? '#E8ECF9' : '#21263A' }]}>
-                    {meta.emoji} {meta.label}
-                  </Text>
-                </View>
-                <Text style={[styles.value, { color: dark ? '#B6BED5' : '#4A536D' }]}>
-                  {item.minutes} min · {percent}%
-                </Text>
-              </View>
-              <View style={[styles.track, { backgroundColor: dark ? '#262B3D' : '#E8ECF8' }]}>
-                <View style={[styles.fill, { width: `${Math.max(percent, 6)}%`, backgroundColor: meta.color }]} />
-              </View>
+    <View style={styles.container}>
+      {counts.map(({ type, count }) => {
+        const meta = WORKOUT_META[type];
+        const widthPct = (count / total) * 100;
+        return (
+          <View key={type} style={styles.row}>
+            <View style={styles.left}>
+              <View style={[styles.dot, { backgroundColor: meta.color }]} />
+              <Text style={[styles.label, { color: palette.text }]}>{meta.label}</Text>
+              <Text style={[styles.count, { color: palette.mutedText }]}>{count}</Text>
+            </View>
+            <View style={[styles.track, { backgroundColor: palette.surfaceMuted }]}>
+              <View style={[styles.fill, { backgroundColor: meta.color, width: `${Math.max(widthPct, 8)}%` }]} />
             </View>
           );
         })}
@@ -75,10 +46,8 @@ export function TrainingBalanceCard() {
 }
 
 const styles = StyleSheet.create({
-  shell: {
-    borderWidth: 1,
-    borderRadius: 20,
-    padding: 14,
+  container: {
+    gap: 12,
   },
   title: {
     fontSize: 18,
@@ -150,6 +119,8 @@ const styles = StyleSheet.create({
   },
   emoji: {
     fontSize: 14,
+    fontWeight: '700',
+    textTransform: 'capitalize',
   },
   label: {
     fontSize: 14,
@@ -160,7 +131,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   track: {
-    height: 8,
+    height: 9,
     borderRadius: 999,
     overflow: 'hidden',
   },

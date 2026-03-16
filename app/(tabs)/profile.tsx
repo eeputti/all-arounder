@@ -1,9 +1,8 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { SectionCard } from '@/components/SectionCard';
-import { StatsBreakdownBar } from '@/components/StatsBreakdownBar';
-import { StatsMetricCard } from '@/components/StatsMetricCard';
-import { MOCK_WORKOUTS } from '@/constants/workouts';
+import { Colors } from '@/constants/theme';
+import { MOCK_WORKOUTS, WORKOUT_META, WorkoutType } from '@/constants/workouts';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 const ACTIVITY_COLORS = {
@@ -15,7 +14,7 @@ const ACTIVITY_COLORS = {
 
 export default function ProfileScreen() {
   const scheme = useColorScheme() ?? 'light';
-  const dark = scheme === 'dark';
+  const palette = Colors[scheme];
 
   const now = new Date();
   const year = now.getFullYear();
@@ -65,43 +64,32 @@ export default function ProfileScreen() {
   const weeklyConsistency = Math.round((activeWeeks / weeksInMonth) * 100);
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: dark ? '#0B0C12' : '#EEF2FF' }]}
-      contentContainerStyle={styles.content}>
-      <View
-        style={[
-          styles.hero,
-          {
-            backgroundColor: dark ? '#141726' : '#FFFFFF',
-            borderColor: dark ? '#262B41' : '#DFE7FF',
-          },
-        ]}>
-        <Text style={styles.heroEmoji}>✨</Text>
-        <Text style={[styles.title, { color: dark ? '#F8FAFF' : '#101935' }]}>Stats</Text>
-        <Text style={[styles.subtitle, { color: dark ? '#AAB6D6' : '#5D6A90' }]}>Cute, clean, and very consistent this month.</Text>
-      </View>
+    <ScrollView style={[styles.container, { backgroundColor: palette.background }]} contentContainerStyle={styles.content}>
+      <Text style={[styles.title, { color: palette.text }]}>Profile</Text>
+      <Text style={[styles.subtitle, { color: palette.mutedText }]}>Consistency and monthly momentum.</Text>
 
-      <View style={styles.grid}>
-        <StatsMetricCard label="Total workouts this month" value={totalMovementSessions} accent="#7F89FF" emoji="🗓️" />
-        <StatsMetricCard label="Runs this month" value={runCount} accent={ACTIVITY_COLORS.run} emoji="🏃" />
-        <StatsMetricCard label="Tennis sessions" value={tennisCount} accent={ACTIVITY_COLORS.tennis} emoji="🎾" />
-        <StatsMetricCard label="Gym sessions" value={gymCount} accent={ACTIVITY_COLORS.gym} emoji="🏋️" />
-        <StatsMetricCard label="Mobility sessions" value={mobilityCount} accent={ACTIVITY_COLORS.mobility} emoji="🧘" />
-        <StatsMetricCard label="Rest days" value={restDays} accent="#8E9BBB" emoji="😴" />
-      </View>
+      <SectionCard title="This Month" subtitle="training snapshot">
+        <View style={[styles.statRow, { borderColor: palette.cardBorder }]}> 
+          <Text style={[styles.statLabel, { color: palette.text }]}>Total Workouts</Text>
+          <Text style={[styles.statValue, { color: palette.text }]}>{monthWorkouts.length}</Text>
+        </View>
 
-      <SectionCard title="Momentum" subtitle="streak + consistency">
-        <View style={styles.momentumRow}>
-          <View style={[styles.momentumPill, { backgroundColor: dark ? '#FF8A3D1F' : '#FF8A3D20' }]}>
-            <Text style={styles.pillEmoji}>🔥</Text>
-            <Text style={[styles.pillValue, { color: dark ? '#FFD3B1' : '#AA4D00' }]}>{longestStreak} days</Text>
-            <Text style={[styles.pillLabel, { color: dark ? '#F2B688' : '#C4650A' }]}>Movement streak</Text>
+        {TYPES.map((type, index) => (
+          <View
+            key={type}
+            style={[styles.statRow, { borderColor: palette.cardBorder, borderBottomWidth: index === TYPES.length - 1 ? 0 : 1 }]}>
+            <Text style={[styles.statLabel, { color: WORKOUT_META[type].color }]}>{WORKOUT_META[type].label}</Text>
+            <Text style={[styles.statValue, { color: palette.text }]}>
+              {monthWorkouts.filter((workout) => workout.type === type).length}
+            </Text>
           </View>
 
-          <View style={[styles.momentumPill, { backgroundColor: dark ? '#5D7BFF1F' : '#5D7BFF1A' }]}>
-            <Text style={styles.pillEmoji}>📈</Text>
-            <Text style={[styles.pillValue, { color: dark ? '#C9D5FF' : '#2241AB' }]}>{weeklyConsistency}%</Text>
-            <Text style={[styles.pillLabel, { color: dark ? '#9DB2FF' : '#3459D4' }]}>Weekly consistency</Text>
+      <SectionCard title="Streak" subtitle="showing up matters">
+        <View style={[styles.streakCard, { backgroundColor: `${palette.tint}1F`, borderColor: `${palette.tint}45` }]}> 
+          <Text style={styles.streakEmoji}>🔥</Text>
+          <View>
+            <Text style={[styles.streakValue, { color: palette.text }]}>{streak} day streak</Text>
+            <Text style={[styles.streakText, { color: palette.mutedText }]}>You trained on 11 of the last 14 days.</Text>
           </View>
         </View>
       </SectionCard>
@@ -125,23 +113,21 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { paddingTop: 72, paddingHorizontal: 16, paddingBottom: 30, gap: 14 },
-  hero: {
-    borderRadius: 28,
-    borderWidth: 1,
-    paddingHorizontal: 18,
-    paddingVertical: 18,
-    gap: 6,
-  },
-  heroEmoji: { fontSize: 26 },
-  title: { fontSize: 34, fontWeight: '800' },
-  subtitle: { fontSize: 15, fontWeight: '600' },
-  grid: {
+  content: { paddingTop: 74, paddingHorizontal: 16, paddingBottom: 28 },
+  title: { fontSize: 34, fontWeight: '800', letterSpacing: -0.6 },
+  subtitle: { marginTop: 3, marginBottom: 16, fontSize: 15, fontWeight: '600' },
+  statRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
   },
-  momentumRow: {
+  statLabel: { fontSize: 15, fontWeight: '700' },
+  statValue: { marginLeft: 'auto', fontSize: 18, fontWeight: '800' },
+  streakCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 14,
     flexDirection: 'row',
     gap: 10,
   },
