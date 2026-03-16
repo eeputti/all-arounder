@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AddWorkoutModal } from '@/components/AddWorkoutModal';
+import { MOOD_META } from '@/constants/moods';
 import { WorkoutDay, WorkoutEntry, WorkoutType } from '@/components/WorkoutDay';
 
 type CalendarDay = {
@@ -46,13 +47,13 @@ const buildMonthGrid = (viewMonth: Date): CalendarDay[] => {
 };
 
 const initialData: Record<string, WorkoutEntry[]> = {
-  '2026-03-02': [{ id: 'w1', type: 'run', duration: '45 min', notes: 'Steady zone 2 run.', date: '2026-03-02' }],
+  '2026-03-02': [{ id: 'w1', type: 'run', duration: '45 min', notes: 'Steady zone 2 run.', date: '2026-03-02', mood: 'good' }],
   '2026-03-04': [
-    { id: 'w2', type: 'gym', duration: '60 min', notes: 'Leg day + pull-ups.', date: '2026-03-04' },
-    { id: 'w3', type: 'mobility', duration: '20 min', notes: 'Hips and ankles.', date: '2026-03-04' },
+    { id: 'w2', type: 'gym', duration: '60 min', notes: 'Leg day + pull-ups.', date: '2026-03-04', mood: 'tired' },
+    { id: 'w3', type: 'mobility', duration: '20 min', notes: 'Hips and ankles.', date: '2026-03-04', mood: 'okay' },
   ],
-  '2026-03-06': [{ id: 'w4', type: 'tennis', duration: '90 min', notes: 'Serve and volley drills.', date: '2026-03-06' }],
-  '2026-03-07': [{ id: 'w5', type: 'rest', duration: 'All day', notes: 'Recharge + walk.', date: '2026-03-07' }],
+  '2026-03-06': [{ id: 'w4', type: 'tennis', duration: '90 min', notes: 'Serve and volley drills.', date: '2026-03-06', mood: 'amazing' }],
+  '2026-03-07': [{ id: 'w5', type: 'rest', duration: 'All day', notes: 'Recharge + walk.', date: '2026-03-07', mood: 'good' }],
 };
 
 export default function CalendarScreen() {
@@ -190,6 +191,16 @@ export default function CalendarScreen() {
                         </Text>
                       </View>
                       <Text style={styles.workoutDuration}>{workout.duration || 'No duration'}</Text>
+                    </View>
+
+                    <View style={styles.moodRow}>
+                      <Text style={styles.moodRowLabel}>Mood</Text>
+                      <View style={[styles.moodPill, { backgroundColor: `${MOOD_META[workout.mood].color}28` }]}>
+                        <Text style={styles.moodPillEmoji}>{MOOD_META[workout.mood].emoji}</Text>
+                        <Text style={[styles.moodPillText, { color: MOOD_META[workout.mood].glow }]}>
+                          {MOOD_META[workout.mood].label}
+                        </Text>
+                      </View>
                     </View>
 
                     {workout.notes ? <Text style={styles.workoutNotes}>{workout.notes}</Text> : null}
@@ -369,6 +380,33 @@ const styles = StyleSheet.create({
   workoutDuration: {
     color: '#FFFFFF',
     fontWeight: '600',
+  },
+  moodRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  moodRowLabel: {
+    color: '#9FA0A8',
+    fontWeight: '600',
+    fontSize: 12,
+    letterSpacing: 0.2,
+    textTransform: 'uppercase',
+  },
+  moodPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 999,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    gap: 5,
+  },
+  moodPillEmoji: {
+    fontSize: 13,
+  },
+  moodPillText: {
+    fontWeight: '700',
+    fontSize: 12,
   },
   workoutNotes: {
     color: '#D1D1D6',
