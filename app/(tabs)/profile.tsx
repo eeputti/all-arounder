@@ -1,79 +1,160 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-const heat = [
-  [0, 1, 2, 1, 3, 0, 2, 2, 1, 0, 3, 2],
-  [1, 2, 2, 3, 1, 0, 1, 3, 2, 2, 1, 0],
-  [0, 1, 3, 2, 1, 2, 2, 1, 3, 1, 0, 2],
-  [1, 3, 2, 1, 0, 1, 3, 2, 2, 1, 2, 1],
-  [2, 1, 0, 2, 3, 2, 1, 0, 1, 3, 2, 2],
-  [3, 2, 1, 0, 2, 1, 3, 2, 1, 0, 2, 3],
-];
+import { SectionCard } from '@/components/SectionCard';
+import { StatsBreakdownBar } from '@/components/StatsBreakdownBar';
+import { StatsMetricCard } from '@/components/StatsMetricCard';
+import { MOCK_WORKOUTS } from '@/constants/workouts';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
-const intensity = ['#F2F4F8', '#D0F4DE', '#A9DEF9', '#E4C1F9'];
-
-const stats = [
-  { label: 'Minutes moved', value: '1,287', emoji: '⏱️' },
-  { label: 'Workouts logged', value: '46', emoji: '📝' },
-  { label: 'Favorite vibe', value: 'Joyful', emoji: '🌈' },
-  { label: 'Longest streak', value: '21 days', emoji: '🔥' },
-];
+const ACTIVITY_COLORS = {
+  run: '#4CD964',
+  tennis: '#FFB340',
+  gym: '#4C9DFF',
+  mobility: '#C07DFF',
+};
 
 export default function ProfileScreen() {
   const scheme = useColorScheme() ?? 'light';
   const dark = scheme === 'dark';
 
   const now = new Date();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const monthWorkouts = MOCK_WORKOUTS.filter((workout) => workout.date.slice(5, 7) === month);
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const monthStart = new Date(year, month, 1);
+  const monthEnd = new Date(year, month + 1, 0);
+  const daysInMonth = monthEnd.getDate();
 
-  const streak = 6;
+  const workoutsThisMonth = MOCK_WORKOUTS.filter((workout) => {
+    const date = new Date(`${workout.date}T00:00:00`);
+    return date >= monthStart && date <= monthEnd;
+  });
+
+  const runCount = workoutsThisMonth.filter((w) => w.type === 'run').length;
+  const tennisCount = workoutsThisMonth.filter((w) => w.type === 'tennis').length;
+  const gymCount = workoutsThisMonth.filter((w) => w.type === 'gym').length;
+  const mobilityCount = workoutsThisMonth.filter((w) => w.type === 'mobility').length;
+
+  const movementDaysSet = new Set(
+    workoutsThisMonth.filter((w) => w.type !== 'rest').map((w) => w.date),
+  );
+  const restDays = Math.max(daysInMonth - movementDaysSet.size, 0);
+  const totalMovementSessions = runCount + tennisCount + gymCount + mobilityCount;
+
+  const longestStreak = (() => {
+    let streak = 0;
+    let longest = 0;
+    for (let day = 1; day <= daysInMonth; day += 1) {
+      const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      if (movementDaysSet.has(dateKey)) {
+        streak += 1;
+        longest = Math.max(longest, streak);
+      } else {
+        streak = 0;
+      }
+    }
+    return longest;
+  })();
+
+  const weeksInMonth = Math.ceil(daysInMonth / 7);
+  const activeWeeks = new Set(
+    Array.from(movementDaysSet).map((dateKey) => {
+      const dayOfMonth = Number(dateKey.slice(-2));
+      return Math.ceil(dayOfMonth / 7);
+    }),
+  ).size;
+  const weeklyConsistency = Math.round((activeWeeks / weeksInMonth) * 100);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Cute stats corner</Text>
-      <Text style={styles.subtitle}>Your movement story in sparkles and squares.</Text>
+    <ScrollView
+      style={[styles.container, { backgroundColor: dark ? '#0B0C12' : '#EEF2FF' }]}
+      contentContainerStyle={styles.content}>
+      <View
+        style={[
+          styles.hero,
+          {
+            backgroundColor: dark ? '#141726' : '#FFFFFF',
+            borderColor: dark ? '#262B41' : '#DFE7FF',
+          },
+        ]}>
+        <Text style={styles.heroEmoji}>✨</Text>
+        <Text style={[styles.title, { color: dark ? '#F8FAFF' : '#101935' }]}>Stats</Text>
+        <Text style={[styles.subtitle, { color: dark ? '#AAB6D6' : '#5D6A90' }]}>Cute, clean, and very consistent this month.</Text>
+      </View>
 
-      <View style={styles.statsGrid}>
-        {stats.map((stat) => (
-          <View key={stat.label} style={styles.statCard}>
-            <Text style={styles.emoji}>{stat.emoji}</Text>
-            <Text style={styles.value}>{stat.value}</Text>
-            <Text style={styles.label}>{stat.label}</Text>
+      <View style={styles.grid}>
+        <StatsMetricCard label="Total workouts this month" value={totalMovementSessions} accent="#7F89FF" emoji="🗓️" />
+        <StatsMetricCard label="Runs this month" value={runCount} accent={ACTIVITY_COLORS.run} emoji="🏃" />
+        <StatsMetricCard label="Tennis sessions" value={tennisCount} accent={ACTIVITY_COLORS.tennis} emoji="🎾" />
+        <StatsMetricCard label="Gym sessions" value={gymCount} accent={ACTIVITY_COLORS.gym} emoji="🏋️" />
+        <StatsMetricCard label="Mobility sessions" value={mobilityCount} accent={ACTIVITY_COLORS.mobility} emoji="🧘" />
+        <StatsMetricCard label="Rest days" value={restDays} accent="#8E9BBB" emoji="😴" />
+      </View>
+
+      <SectionCard title="Momentum" subtitle="streak + consistency">
+        <View style={styles.momentumRow}>
+          <View style={[styles.momentumPill, { backgroundColor: dark ? '#FF8A3D1F' : '#FF8A3D20' }]}>
+            <Text style={styles.pillEmoji}>🔥</Text>
+            <Text style={[styles.pillValue, { color: dark ? '#FFD3B1' : '#AA4D00' }]}>{longestStreak} days</Text>
+            <Text style={[styles.pillLabel, { color: dark ? '#F2B688' : '#C4650A' }]}>Movement streak</Text>
           </View>
-        ))}
-      </View>
 
-      <View style={styles.heatmapCard}>
-        <Text style={styles.heatmapTitle}>Yearly activity heatmap</Text>
-        <Text style={styles.heatmapSub}>Darker blocks = more movement magic</Text>
-        <View style={styles.heatGrid}>
-          {heat.map((column, colIndex) => (
-            <View key={`col-${colIndex}`} style={styles.column}>
-              {column.map((cell, rowIndex) => (
-                <View key={`cell-${colIndex}-${rowIndex}`} style={[styles.cell, { backgroundColor: intensity[cell] }]} />
-              ))}
-            </View>
-          ))}
+          <View style={[styles.momentumPill, { backgroundColor: dark ? '#5D7BFF1F' : '#5D7BFF1A' }]}>
+            <Text style={styles.pillEmoji}>📈</Text>
+            <Text style={[styles.pillValue, { color: dark ? '#C9D5FF' : '#2241AB' }]}>{weeklyConsistency}%</Text>
+            <Text style={[styles.pillLabel, { color: dark ? '#9DB2FF' : '#3459D4' }]}>Weekly consistency</Text>
+          </View>
         </View>
-      </View>
+      </SectionCard>
+
+      <SectionCard title="Monthly movement breakdown" subtitle="session distribution">
+        <View style={styles.breakdownList}>
+          <StatsBreakdownBar label="Running" value={runCount} total={totalMovementSessions} color={ACTIVITY_COLORS.run} />
+          <StatsBreakdownBar label="Tennis" value={tennisCount} total={totalMovementSessions} color={ACTIVITY_COLORS.tennis} />
+          <StatsBreakdownBar label="Gym" value={gymCount} total={totalMovementSessions} color={ACTIVITY_COLORS.gym} />
+          <StatsBreakdownBar
+            label="Mobility"
+            value={mobilityCount}
+            total={totalMovementSessions}
+            color={ACTIVITY_COLORS.mobility}
+          />
+        </View>
+      </SectionCard>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFF9EF' },
-  content: { paddingTop: 70, paddingHorizontal: 16, paddingBottom: 30, gap: 16 },
-  title: { fontSize: 33, fontWeight: '800', color: '#6E4A32' },
-  subtitle: { color: '#9A6B4A' },
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  statCard: { width: '48%', backgroundColor: '#FFFFFF', borderRadius: 20, borderWidth: 2, borderColor: '#FFE4BF', padding: 12, gap: 3 },
-  emoji: { fontSize: 24 },
-  value: { fontSize: 24, fontWeight: '800', color: '#6E4A32' },
-  label: { color: '#9A6B4A', fontWeight: '600' },
-  heatmapCard: { backgroundColor: '#FFFFFF', borderRadius: 22, borderWidth: 2, borderColor: '#FFE4BF', padding: 14 },
-  heatmapTitle: { fontSize: 19, fontWeight: '700', color: '#6E4A32' },
-  heatmapSub: { color: '#9A6B4A', marginBottom: 10 },
-  heatGrid: { flexDirection: 'row', gap: 5 },
-  column: { gap: 5 },
-  cell: { width: 18, height: 18, borderRadius: 5 },
+  container: { flex: 1 },
+  content: { paddingTop: 72, paddingHorizontal: 16, paddingBottom: 30, gap: 14 },
+  hero: {
+    borderRadius: 28,
+    borderWidth: 1,
+    paddingHorizontal: 18,
+    paddingVertical: 18,
+    gap: 6,
+  },
+  heroEmoji: { fontSize: 26 },
+  title: { fontSize: 34, fontWeight: '800' },
+  subtitle: { fontSize: 15, fontWeight: '600' },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  momentumRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  momentumPill: {
+    flex: 1,
+    borderRadius: 18,
+    padding: 12,
+    gap: 6,
+  },
+  pillEmoji: { fontSize: 20 },
+  pillValue: { fontSize: 24, fontWeight: '800' },
+  pillLabel: { fontSize: 13, fontWeight: '700' },
+  breakdownList: {
+    gap: 12,
+  },
 });

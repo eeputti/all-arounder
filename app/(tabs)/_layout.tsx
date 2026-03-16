@@ -53,7 +53,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Stats',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={24} name="person.fill" color={color} />,
         }}
       />
     </Tabs>
