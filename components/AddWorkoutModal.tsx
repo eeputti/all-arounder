@@ -9,6 +9,8 @@ import {
   View,
 } from 'react-native';
 
+import { MOOD_META, MOOD_OPTIONS, WorkoutMood } from '@/constants/moods';
+
 import type { WorkoutEntry, WorkoutType } from './WorkoutDay';
 
 type AddWorkoutModalProps = {
@@ -31,18 +33,21 @@ export function AddWorkoutModal({ visible, date, initialWorkout, onClose, onSave
   const [selectedType, setSelectedType] = useState<WorkoutType>('run');
   const [duration, setDuration] = useState('');
   const [notes, setNotes] = useState('');
+  const [mood, setMood] = useState<WorkoutMood>('good');
 
   useEffect(() => {
     if (initialWorkout) {
       setSelectedType(initialWorkout.type);
       setDuration(initialWorkout.duration);
       setNotes(initialWorkout.notes);
+      setMood(initialWorkout.mood);
       return;
     }
 
     setSelectedType('run');
     setDuration('');
     setNotes('');
+    setMood('good');
   }, [initialWorkout, visible]);
 
   const title = useMemo(() => (initialWorkout ? 'Edit Workout' : 'Add Workout'), [initialWorkout]);
@@ -54,6 +59,7 @@ export function AddWorkoutModal({ visible, date, initialWorkout, onClose, onSave
         duration: duration.trim(),
         notes: notes.trim(),
         date,
+        mood,
       },
       initialWorkout?.id,
     );
@@ -82,6 +88,30 @@ export function AddWorkoutModal({ visible, date, initialWorkout, onClose, onSave
               );
             })}
           </ScrollView>
+
+          <Text style={styles.label}>How did it feel?</Text>
+          <View style={styles.moodGrid}>
+            {MOOD_OPTIONS.map((option) => {
+              const selected = mood === option;
+              const meta = MOOD_META[option];
+              return (
+                <Pressable
+                  key={option}
+                  style={[
+                    styles.moodChip,
+                    {
+                      backgroundColor: selected ? `${meta.color}44` : '#2C2C2E',
+                      borderColor: selected ? meta.glow : '#3A3A3C',
+                    },
+                  ]}
+                  onPress={() => setMood(option)}
+                >
+                  <Text style={styles.moodEmoji}>{meta.emoji}</Text>
+                  <Text style={[styles.moodLabel, selected && { color: meta.glow }]}>{meta.label}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
 
           <Text style={styles.label}>Duration</Text>
           <TextInput
@@ -166,6 +196,27 @@ const styles = StyleSheet.create({
   },
   selectedChipLabel: {
     color: '#101012',
+  },
+  moodGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  moodChip: {
+    width: '31.5%',
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    gap: 2,
+  },
+  moodEmoji: {
+    fontSize: 19,
+  },
+  moodLabel: {
+    color: '#E5E5EA',
+    fontWeight: '700',
+    fontSize: 12,
   },
   input: {
     backgroundColor: '#2C2C2E',
