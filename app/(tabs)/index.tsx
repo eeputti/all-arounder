@@ -1,61 +1,60 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { SectionCard } from '@/components/SectionCard';
-import { WORKOUT_META, MOCK_WORKOUTS, WorkoutType } from '@/constants/workouts';
+import { MOCK_WORKOUTS, WORKOUT_META, WorkoutType } from '@/constants/workouts';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 const TRACKED: WorkoutType[] = ['run', 'tennis', 'gym', 'mobility'];
 
-const trainingBalance = [
-  { sport: 'run', minutes: 150, color: '#5e9cff' },
-  { sport: 'tennis', minutes: 120, color: '#30d158' },
-  { sport: 'gym', minutes: 110, color: '#ff9f0a' },
-  { sport: 'mobility', minutes: 80, color: '#bf5af2' },
-];
-
-const totalMinutes = trainingBalance.reduce((total, entry) => total + entry.minutes, 0);
-
-const formatDate = (date: string) =>
-  new Date(`${date}T00:00:00`).toLocaleDateString(undefined, {
+const formatDisplayDate = (date: Date) =>
+  date.toLocaleDateString(undefined, {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
   });
 
+const formatWorkoutDate = (date: string) => formatDisplayDate(new Date(`${date}T00:00:00`));
+
+const getDateKey = (date: Date) => date.toISOString().slice(0, 10);
+
+const isDateInCurrentWeek = (dateKey: string, reference: Date) => {
+  const current = new Date(`${dateKey}T00:00:00`);
+  const weekStart = new Date(reference);
+  weekStart.setDate(reference.getDate() - reference.getDay());
+  weekStart.setHours(0, 0, 0, 0);
+
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 7);
+
+  return current >= weekStart && current < weekEnd;
+};
+
 export default function HomeScreen() {
   const scheme = useColorScheme() ?? 'light';
-  const palette = Colors[scheme];
+  const dark = scheme === 'dark';
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-
   const todayKey = getDateKey(today);
-  const weekStart = getWeekStart(today);
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekEnd.getDate() + 6);
 
-  const workoutsSorted = [...MOCK_WORKOUTS].sort((a, b) => a.date.localeCompare(b.date));
-
-  const upcomingWorkouts = MOCK_WORKOUTS.filter((workout) => workout.date >= today).slice(0, 3);
+  const todayWorkouts = MOCK_WORKOUTS.filter((workout) => workout.date === todayKey);
+  const upcomingWorkouts = MOCK_WORKOUTS.filter((workout) => workout.date >= todayKey).slice(0, 3);
+  const weeklyWorkouts = MOCK_WORKOUTS.filter((workout) => isDateInCurrentWeek(workout.date, today));
 
   const weekCounts = TRACKED.map((type) => ({
     type,
     count: weeklyWorkouts.filter((workout) => workout.type === type).length,
   }));
 
-  const totalSessions = weeklyWorkouts.length;
-  const movementSessions = weeklyWorkouts.filter((workout) => workout.type !== 'rest').length;
-  const movementMinutes = weeklyWorkouts.reduce((sum, workout) => sum + workout.duration, 0);
-  const activeDays = new Set(weeklyWorkouts.filter((workout) => workout.type !== 'rest').map((workout) => workout.date)).size;
-
-  const movementStreak = getMovementStreak(workoutsSorted, todayKey);
-
-  const topType = MOVEMENT_TYPES.map((type) => ({
-    type,
+  const trainingBalance = TRACKED.map((type) => ({
+    sport: type,
     minutes: weeklyWorkouts
       .filter((workout) => workout.type === type)
       .reduce((sum, workout) => sum + workout.duration, 0),
-  })).sort((a, b) => b.minutes - a.minutes)[0];
+    color: WORKOUT_META[type].color,
+  }));
+
+  const totalMinutes = trainingBalance.reduce((total, entry) => total + entry.minutes, 0);
 
   return (
     <ScrollView
@@ -64,14 +63,10 @@ export default function HomeScreen() {
       showsVerticalScrollIndicator={false}>
       <View style={styles.heroTopRow}>
         <Text style={[styles.title, { color: dark ? '#F8F9FF' : '#12172A' }]}>All-Arounder</Text>
-        <View style={[styles.streakPill, { backgroundColor: dark ? '#212843' : '#E8EEFF' }]}>
-          <Text style={styles.streakEmoji}>✨</Text>
-          <Text style={[styles.streakText, { color: dark ? '#D9E4FF' : '#3158CC' }]}>7-day streak</Text>
-        </View>
       </View>
       <Text style={[styles.subtitle, { color: dark ? '#AEB6D2' : '#59617B' }]}>Move joyfully. Recover intentionally.</Text>
 
-      <SectionCard title="Today" subtitle={formatDate(today)}>
+      <SectionCard title="Today" subtitle={formatDisplayDate(today)}>
         {todayWorkouts.length === 0 ? (
           <Text style={[styles.placeholder, { color: dark ? '#AAB2CC' : '#646F89' }]}>No workout logged yet. Tap Add to plan your next feel-good session.</Text>
         ) : (
@@ -90,12 +85,12 @@ export default function HomeScreen() {
       </SectionCard>
 
       <View style={[styles.balanceCard, { backgroundColor: dark ? '#141A2D' : '#11172B' }]}>
-        <Text style={styles.cardTitle}>training balance</Text>
+        <Text style={styles.cardTitle}>Training balance</Text>
         <Text style={styles.balanceSubtitle}>Minutes by sport this week</Text>
 
         <View style={styles.balanceRows}>
           {trainingBalance.map((entry) => {
-            const percent = Math.round((entry.minutes / totalMinutes) * 100);
+            const percent = totalMinutes > 0 ? Math.round((entry.minutes / totalMinutes) * 100) : 0;
 
             return (
               <View key={entry.sport} style={styles.balanceRow}>
@@ -129,7 +124,7 @@ export default function HomeScreen() {
         ) : (
           upcomingWorkouts.map((workout) => (
             <View key={workout.id} style={[styles.upcomingRow, { borderColor: dark ? '#292F49' : '#E2E8FA' }]}>
-              <Text style={[styles.upcomingDate, { color: dark ? '#B0B8D6' : '#64708E' }]}>{formatDate(workout.date)}</Text>
+              <Text style={[styles.upcomingDate, { color: dark ? '#B0B8D6' : '#64708E' }]}>{formatWorkoutDate(workout.date)}</Text>
               <Text style={styles.upcomingEmoji}>{WORKOUT_META[workout.type].emoji}</Text>
               <Text style={[styles.upcomingType, { color: dark ? '#EEF1FF' : '#1D2442' }]}>{WORKOUT_META[workout.type].label}</Text>
               <Text style={[styles.upcomingDuration, { color: dark ? '#CAD2EF' : '#3A4669' }]}>{workout.duration}m</Text>
@@ -184,21 +179,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
   },
-  streakPill: {
-    borderRadius: 999,
-    paddingHorizontal: 11,
-    paddingVertical: 7,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  streakEmoji: {
-    fontSize: 12,
-  },
-  streakText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
   placeholder: { fontSize: 14, lineHeight: 21 },
   todayList: {
     gap: 10,
@@ -249,7 +229,6 @@ const styles = StyleSheet.create({
     color: '#f4f7ff',
     fontSize: 20,
     fontWeight: '800',
-    textTransform: 'capitalize',
     letterSpacing: -0.3,
   },
   balanceSubtitle: {
@@ -265,10 +244,9 @@ const styles = StyleSheet.create({
   balanceRow: {
     gap: 8,
   },
-  chipWrap: {
+  balanceHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
   },
   balanceLabel: {
     color: '#ffffff',

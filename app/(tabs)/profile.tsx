@@ -19,7 +19,7 @@ const TRACKED_TYPES: WorkoutType[] = ['run', 'tennis', 'gym', 'mobility'];
 
 export default function ProfileScreen() {
   const scheme = useColorScheme() ?? 'light';
-  const palette = Colors[scheme];
+  const dark = scheme === 'dark';
 
   const movementWorkouts = MOCK_WORKOUTS.filter((workout) => workout.type !== 'rest');
   const now = new Date();
