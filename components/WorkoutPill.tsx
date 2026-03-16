@@ -1,6 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { Colors } from '@/constants/theme';
 import { WORKOUT_META, WorkoutType } from '@/constants/workouts';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 type WorkoutPillProps = {
   type: WorkoutType;
@@ -10,6 +12,8 @@ type WorkoutPillProps = {
 
 export function WorkoutPill({ type, active = false, onPress }: WorkoutPillProps) {
   const meta = WORKOUT_META[type];
+  const scheme = useColorScheme() ?? 'light';
+  const palette = Colors[scheme];
 
   return (
     <Pressable
@@ -17,13 +21,13 @@ export function WorkoutPill({ type, active = false, onPress }: WorkoutPillProps)
       style={({ pressed }) => [
         styles.pill,
         {
-          borderColor: meta.color,
-          backgroundColor: active ? `${meta.color}22` : 'transparent',
-          opacity: pressed ? 0.85 : 1,
+          borderColor: active ? meta.color : palette.cardBorder,
+          backgroundColor: active ? `${meta.color}22` : palette.surfaceMuted,
+          opacity: pressed ? 0.9 : 1,
         },
       ]}>
       <View style={[styles.dot, { backgroundColor: meta.color }]} />
-      <Text style={[styles.label, { color: meta.color }]}>{meta.label}</Text>
+      <Text style={[styles.label, { color: active ? meta.color : palette.text }]}>{meta.label}</Text>
     </Pressable>
   );
 }
@@ -31,9 +35,9 @@ export function WorkoutPill({ type, active = false, onPress }: WorkoutPillProps)
 const styles = StyleSheet.create({
   pill: {
     borderRadius: 999,
-    borderWidth: 1.5,
+    borderWidth: 1,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 9,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,

@@ -1,6 +1,7 @@
 import { PropsWithChildren } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 type SectionCardProps = PropsWithChildren<{
@@ -10,7 +11,7 @@ type SectionCardProps = PropsWithChildren<{
 
 export function SectionCard({ title, subtitle, children }: SectionCardProps) {
   const scheme = useColorScheme() ?? 'light';
-  const dark = scheme === 'dark';
+  const palette = Colors[scheme];
 
   return (
     <View
@@ -54,6 +55,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: '600',
   },
 });
