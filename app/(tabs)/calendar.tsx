@@ -10,6 +10,46 @@ const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const iso = (date: Date) => date.toISOString().slice(0, 10);
 
+const demoWorkouts: Record<string, WorkoutType[]> = {
+  '2026-10-02': ['run'],
+  '2026-10-04': ['gym'],
+  '2026-10-07': ['tennis'],
+  '2026-10-10': ['cycle'],
+  '2026-10-12': ['run', 'swim'],
+  '2026-10-16': ['swim'],
+  '2026-10-19': ['gym', 'run'],
+  '2026-10-23': ['football'],
+  '2026-10-26': ['tennis'],
+  '2026-10-29': ['run'],
+};
+
+function toKey(date: Date) {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function formatMonth(date: Date) {
+  return date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+}
+
+function buildMonthGrid(viewMonth: Date): CalendarCell[] {
+  const year = viewMonth.getFullYear();
+  const month = viewMonth.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const mondayBasedOffset = (firstDay.getDay() + 6) % 7;
+
+  const cells: CalendarCell[] = [];
+
+  for (let i = 0; i < 42; i += 1) {
+    const date = new Date(year, month, i + 1 - mondayBasedOffset);
+    cells.push({ date, inCurrentMonth: date.getMonth() === month });
+  }
+
+  return cells;
+}
+
 export default function CalendarScreen() {
   const scheme = useColorScheme() ?? 'light';
   const dark = scheme === 'dark';
