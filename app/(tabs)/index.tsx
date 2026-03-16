@@ -1,109 +1,169 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { SectionCard } from '@/components/SectionCard';
 import { TrainingBalanceCard } from '@/components/TrainingBalanceCard';
-import { WORKOUT_META, MOCK_WORKOUTS, WorkoutType } from '@/constants/workouts';
+import { WORKOUT_META, MOCK_WORKOUTS, Workout, WorkoutType } from '@/constants/workouts';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
-const TRACKED: WorkoutType[] = ['run', 'tennis', 'gym', 'mobility'];
+const ALL_TYPES: WorkoutType[] = ['run', 'tennis', 'gym', 'mobility', 'rest'];
+const MOVEMENT_TYPES: WorkoutType[] = ['run', 'tennis', 'gym', 'mobility'];
+const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-const trainingBalance = [
-  { sport: 'run', minutes: 150, color: '#5e9cff' },
-  { sport: 'tennis', minutes: 120, color: '#30d158' },
-  { sport: 'gym', minutes: 110, color: '#ff9f0a' },
-  { sport: 'mobility', minutes: 80, color: '#bf5af2' },
-];
+const getDateKey = (date: Date) => date.toISOString().slice(0, 10);
 
-const totalMinutes = trainingBalance.reduce((total, entry) => total + entry.minutes, 0);
+const getWeekStart = (date: Date) => {
+  const start = new Date(date);
+  const day = start.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  start.setDate(start.getDate() + diff);
+  start.setHours(0, 0, 0, 0);
+  return start;
+};
+
+const formatUpcomingDate = (dateText: string) => {
+  const date = new Date(`${dateText}T00:00:00`);
+  return `${WEEKDAY_LABELS[date.getDay()]} ${date.getMonth() + 1}/${date.getDate()}`;
+};
+
+const getMovementStreak = (workouts: Workout[], todayKey: string) => {
+  const hasMovement = new Set(
+    workouts.filter((workout) => workout.type !== 'rest').map((workout) => workout.date)
+  );
+
+  let streak = 0;
+  const cursor = new Date(`${todayKey}T00:00:00`);
+
+  while (hasMovement.has(getDateKey(cursor))) {
+    streak += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  return streak;
+};
 
 export default function HomeScreen() {
   const scheme = useColorScheme() ?? 'light';
   const dark = scheme === 'dark';
 
-  const today = new Date().toISOString().slice(0, 10);
-  const todayWorkouts = MOCK_WORKOUTS.filter((workout) => workout.date === today);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  const upcomingWorkouts = MOCK_WORKOUTS.filter((workout) => workout.date >= today).slice(0, 4);
+  const todayKey = getDateKey(today);
+  const weekStart = getWeekStart(today);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 6);
 
-  const weekCounts = TRACKED.map((type) => ({
+  const workoutsSorted = [...MOCK_WORKOUTS].sort((a, b) => a.date.localeCompare(b.date));
+
+  const todayWorkouts = workoutsSorted.filter((workout) => workout.date === todayKey);
+
+  const upcomingWorkouts = workoutsSorted.filter((workout) => workout.date > todayKey).slice(0, 5);
+
+  const weeklyWorkouts = workoutsSorted.filter((workout) => {
+    const date = new Date(`${workout.date}T00:00:00`);
+    return date >= weekStart && date <= weekEnd;
+  });
+
+  const workoutTypeCounts = ALL_TYPES.map((type) => ({
     type,
-    count: MOCK_WORKOUTS.slice(-7).filter((workout) => workout.type === type).length,
+    count: weeklyWorkouts.filter((workout) => workout.type === type).length,
   }));
 
+  const totalSessions = weeklyWorkouts.length;
+  const movementSessions = weeklyWorkouts.filter((workout) => workout.type !== 'rest').length;
+  const movementMinutes = weeklyWorkouts.reduce((sum, workout) => sum + workout.duration, 0);
+  const activeDays = new Set(weeklyWorkouts.filter((workout) => workout.type !== 'rest').map((workout) => workout.date)).size;
+
+  const movementStreak = getMovementStreak(workoutsSorted, todayKey);
+
+  const topType = MOVEMENT_TYPES.map((type) => ({
+    type,
+    minutes: weeklyWorkouts
+      .filter((workout) => workout.type === type)
+      .reduce((sum, workout) => sum + workout.duration, 0),
+  })).sort((a, b) => b.minutes - a.minutes)[0];
+
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: dark ? '#0E0F13' : '#F4F6FD' }]}
-      contentContainerStyle={styles.content}>
-      <Text style={[styles.title, { color: dark ? '#F7F8FC' : '#0F1322' }]}>All-Arounder</Text>
-      <Text style={[styles.subtitle, { color: dark ? '#A2A7B6' : '#62697A' }]}>your sport calendar</Text>
+    <View style={[styles.container, { backgroundColor: dark ? '#0E0F13' : '#F4F2FF' }]}>
+      <View style={styles.content}>
+        <Text style={[styles.title, { color: dark ? '#F7F8FC' : '#1B1232' }]}>All-Arounder</Text>
+        <Text style={[styles.subtitle, { color: dark ? '#AFB3C6' : '#695D89' }]}>Your weekly movement glow-up ✨</Text>
 
-      <SectionCard title="Today" subtitle={today}>
-        {todayWorkouts.length === 0 ? (
-          <Text style={[styles.placeholder, { color: dark ? '#A5A9B7' : '#646B7D' }]}>No workout logged yet. Tap Add to plan your session.</Text>
-        ) : (
-          todayWorkouts.map((workout) => (
-            <View key={workout.id} style={[styles.row, { borderColor: dark ? '#2C3040' : '#EAEDF6' }]}>
-              <Text style={[styles.rowType, { color: WORKOUT_META[workout.type].color }]}>{WORKOUT_META[workout.type].label}</Text>
-              <Text style={[styles.rowMeta, { color: dark ? '#CED3E2' : '#32384C' }]}>{workout.duration} min</Text>
-            </View>
-          ))
-        )}
-      </SectionCard>
-
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>training balance</Text>
-        <Text style={styles.balanceSubtitle}>Minutes by sport this week</Text>
-
-        <View style={styles.balanceRows}>
-          {trainingBalance.map((entry) => {
-            const percent = Math.round((entry.minutes / totalMinutes) * 100);
-
-            return (
-              <View key={entry.sport} style={styles.balanceRow}>
-                <View style={styles.balanceHeader}>
-                  <Text style={styles.balanceLabel}>{entry.sport}</Text>
-                  <Text style={styles.balanceValue}>
-                    {entry.minutes} min · {percent}%
-                  </Text>
-                </View>
-
-                <View style={styles.balanceTrack}>
-                  <View
-                    style={[
-                      styles.balanceFill,
-                      {
-                        width: `${percent}%`,
-                        backgroundColor: entry.color,
-                      },
-                    ]}
-                  />
-                </View>
+        <SectionCard title="Today's workouts" subtitle={todayKey}>
+          {todayWorkouts.length === 0 ? (
+            <Text style={[styles.placeholder, { color: dark ? '#A5A9B7' : '#6A617E' }]}>No workout planned yet. Add one to keep your streak alive 💫</Text>
+          ) : (
+            todayWorkouts.map((workout) => (
+              <View key={workout.id} style={[styles.workoutRow, { borderColor: dark ? '#2D3042' : '#EAE3FF' }]}>
+                <Text style={styles.rowEmoji}>{WORKOUT_META[workout.type].emoji}</Text>
+                <Text style={[styles.rowType, { color: WORKOUT_META[workout.type].color }]}>{WORKOUT_META[workout.type].label}</Text>
+                <Text style={[styles.rowMeta, { color: dark ? '#D8DBE8' : '#3A3550' }]}>{workout.duration} min</Text>
               </View>
-            );
-          })}
-        </View>
-      </View>
+            ))
+          )}
+        </SectionCard>
 
-      <View style={styles.actionsRow}>
-        <Pressable style={styles.button}>
-          <Text style={styles.buttonText}>add run</Text>
-        </Pressable>
+        <SectionCard title="Upcoming workouts" subtitle="next up">
+          {upcomingWorkouts.length === 0 ? (
+            <Text style={[styles.placeholder, { color: dark ? '#A5A9B7' : '#6A617E' }]}>You are all caught up this week 🎉</Text>
+          ) : (
+            upcomingWorkouts.map((workout) => (
+              <View key={workout.id} style={styles.upcomingRow}>
+                <Text style={[styles.upcomingDate, { color: dark ? '#AAB0C4' : '#6C6484' }]}>{formatUpcomingDate(workout.date)}</Text>
+                <Text style={styles.rowEmoji}>{WORKOUT_META[workout.type].emoji}</Text>
+                <Text style={[styles.upcomingType, { color: dark ? '#E9EBF4' : '#2D2741' }]}>{WORKOUT_META[workout.type].label}</Text>
+                <Text style={[styles.upcomingDuration, { color: dark ? '#C8CDDF' : '#4D4564' }]}>{workout.duration}m</Text>
+              </View>
+            ))
+          )}
+        </SectionCard>
 
-      <SectionCard title="Weekly Training Balance" subtitle="distribution by sport">
-        <TrainingBalanceCard workouts={MOCK_WORKOUTS.slice(-7)} />
-      </SectionCard>
-
-      <SectionCard title="Weekly Volume" subtitle="sessions done this week">
-        <View style={styles.chipWrap}>
-          {weekCounts.map((item) => (
-            <View key={item.type} style={[styles.chip, { backgroundColor: `${WORKOUT_META[item.type].color}1F` }]}>
-              <Text style={[styles.chipValue, { color: WORKOUT_META[item.type].color }]}>{item.count}</Text>
-              <Text style={[styles.chipLabel, { color: dark ? '#DCE0EC' : '#30374B' }]}>{WORKOUT_META[item.type].label}</Text>
+        <SectionCard title="Weekly movement summary" subtitle="this week at a glance">
+          <View style={styles.summaryGrid}>
+            <View style={[styles.summaryTile, { backgroundColor: dark ? '#232635' : '#EFE9FF' }]}>
+              <Text style={[styles.tileValue, { color: dark ? '#F4EEFF' : '#5E2CB4' }]}>{movementMinutes}</Text>
+              <Text style={[styles.tileLabel, { color: dark ? '#BFC4D8' : '#5F577A' }]}>minutes moved</Text>
             </View>
-          ))}
-        </View>
-      </SectionCard>
-    </ScrollView>
+            <View style={[styles.summaryTile, { backgroundColor: dark ? '#232635' : '#EFE9FF' }]}>
+              <Text style={[styles.tileValue, { color: dark ? '#F4EEFF' : '#5E2CB4' }]}>{movementSessions}/{totalSessions}</Text>
+              <Text style={[styles.tileLabel, { color: dark ? '#BFC4D8' : '#5F577A' }]}>movement sessions</Text>
+            </View>
+            <View style={[styles.summaryTile, { backgroundColor: dark ? '#232635' : '#EFE9FF' }]}>
+              <Text style={[styles.tileValue, { color: dark ? '#F4EEFF' : '#5E2CB4' }]}>{activeDays}</Text>
+              <Text style={[styles.tileLabel, { color: dark ? '#BFC4D8' : '#5F577A' }]}>active days</Text>
+            </View>
+            <View style={[styles.summaryTile, { backgroundColor: dark ? '#232635' : '#EFE9FF' }]}>
+              <Text style={[styles.tileValue, { color: dark ? '#F4EEFF' : '#5E2CB4' }]}>{WORKOUT_META[topType.type].emoji}</Text>
+              <Text style={[styles.tileLabel, { color: dark ? '#BFC4D8' : '#5F577A' }]}>top focus: {WORKOUT_META[topType.type].label}</Text>
+            </View>
+          </View>
+        </SectionCard>
+
+        <SectionCard title="Workout type counts for this week" subtitle="run · tennis · gym · mobility · rest">
+          <View style={styles.countGrid}>
+            {workoutTypeCounts.map((item) => (
+              <View key={item.type} style={[styles.countChip, { backgroundColor: `${WORKOUT_META[item.type].color}22` }]}>
+                <Text style={styles.rowEmoji}>{WORKOUT_META[item.type].emoji}</Text>
+                <Text style={[styles.countValue, { color: WORKOUT_META[item.type].color }]}>{item.count}</Text>
+                <Text style={[styles.countLabel, { color: dark ? '#DCE0EC' : '#35304B' }]}>{WORKOUT_META[item.type].label}</Text>
+              </View>
+            ))}
+          </View>
+        </SectionCard>
+
+        <SectionCard title="Movement streak" subtitle="consecutive active days">
+          <View style={[styles.streakCard, { backgroundColor: dark ? '#272A3A' : '#F1EBFF' }]}>
+            <Text style={styles.streakEmoji}>🔥</Text>
+            <Text style={[styles.streakValue, { color: dark ? '#FFD9A0' : '#B35B00' }]}>{movementStreak} days</Text>
+            <Text style={[styles.streakText, { color: dark ? '#D1D5E4' : '#5E5678' }]}>Keep the spark: one small session today counts.</Text>
+          </View>
+        </SectionCard>
+
+        <SectionCard title="Visual training balance" subtitle="how balanced your week has been">
+          <TrainingBalanceCard workouts={weeklyWorkouts} />
+        </SectionCard>
+      </View>
+    </View>
   );
 }
 
@@ -113,6 +173,7 @@ const styles = StyleSheet.create({
     paddingTop: 74,
     paddingHorizontal: 16,
     paddingBottom: 28,
+    gap: 2,
   },
   title: {
     fontSize: 34,
@@ -123,25 +184,37 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 18,
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   placeholder: { fontSize: 14, lineHeight: 20 },
-  row: {
+  workoutRow: {
     borderBottomWidth: 1,
     paddingVertical: 10,
     flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
-  rowType: { fontSize: 15, fontWeight: '700' },
-  rowMeta: { marginLeft: 'auto', fontSize: 14, fontWeight: '600' },
+  rowEmoji: {
+    fontSize: 15,
+  },
+  rowType: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  rowMeta: {
+    marginLeft: 'auto',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   upcomingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
     paddingVertical: 8,
   },
   upcomingDate: {
-    width: 50,
-    fontSize: 13,
+    width: 76,
+    fontSize: 12,
     fontWeight: '700',
   },
   upcomingType: {
@@ -149,58 +222,68 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     flex: 1,
   },
-  balanceSubtitle: {
-    color: '#8e8e93',
-    fontSize: 14,
-    marginBottom: 16,
+  upcomingDuration: {
+    fontSize: 13,
+    fontWeight: '700',
   },
-  balanceRows: {
-    gap: 12,
-  },
-  balanceRow: {
-    gap: 8,
-  },
-  balanceHeader: {
+  summaryGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  balanceLabel: {
-    color: '#ffffff',
-    fontSize: 15,
-    textTransform: 'capitalize',
-  },
-  balanceValue: {
-    color: '#d1d1d6',
-    fontSize: 14,
-  },
-  balanceTrack: {
-    width: '100%',
-    height: 10,
-    backgroundColor: '#2c2c2e',
-    borderRadius: 999,
-    overflow: 'hidden',
-  },
-  balanceFill: {
-    height: '100%',
-    borderRadius: 999,
-  },
-  actionsRow: {
+    flexWrap: 'wrap',
     gap: 10,
   },
-  chip: {
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    minWidth: '47%',
+  summaryTile: {
+    width: '48%',
+    borderRadius: 14,
+    padding: 12,
+    minHeight: 78,
+    justifyContent: 'center',
   },
-  chipValue: {
-    fontSize: 24,
+  tileValue: {
+    fontSize: 22,
     fontWeight: '800',
+    marginBottom: 4,
+  },
+  tileLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  countGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  countChip: {
+    width: '31%',
+    borderRadius: 14,
+    paddingVertical: 10,
+    alignItems: 'center',
+    gap: 1,
+  },
+  countValue: {
+    fontSize: 22,
+    fontWeight: '800',
+  },
+  countLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  streakCard: {
+    borderRadius: 16,
+    padding: 14,
+    alignItems: 'center',
+  },
+  streakEmoji: {
+    fontSize: 24,
+    marginBottom: 6,
+  },
+  streakValue: {
+    fontSize: 28,
+    fontWeight: '900',
     marginBottom: 2,
   },
-  chipLabel: {
+  streakText: {
     fontSize: 13,
     fontWeight: '600',
+    textAlign: 'center',
   },
 });
