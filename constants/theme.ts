@@ -1,41 +1,50 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+const tintColorLight = '#4D63FF';
+const tintColorDark = '#8FA3FF';
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
+    text: '#141B33',
+    background: '#F3F5FF',
     tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
+    icon: '#7A8098',
+    tabIconDefault: '#8B90A6',
     tabIconSelected: tintColorLight,
+    card: '#FFFFFF',
+    cardBorder: '#E5EAF8',
+    cardShadow: 'rgba(36, 44, 88, 0.08)',
+    mutedText: '#6A7392',
+    inputBackground: '#F5F7FF',
+    surfaceMuted: '#EEF2FF',
+    modalBackdrop: 'rgba(12, 16, 34, 0.55)',
+    success: '#37C977',
+    danger: '#F05A67',
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
+    text: '#F5F7FF',
+    background: '#090D1A',
     tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
+    icon: '#9BA3C6',
+    tabIconDefault: '#838CB0',
     tabIconSelected: tintColorDark,
+    card: '#141A2C',
+    cardBorder: '#252E49',
+    cardShadow: 'rgba(2, 6, 23, 0.55)',
+    mutedText: '#98A2C8',
+    inputBackground: '#1B233B',
+    surfaceMuted: '#1A2138',
+    modalBackdrop: 'rgba(3, 6, 13, 0.72)',
+    success: '#4EDB88',
+    danger: '#FF6E7C',
   },
 };
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
     sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
     serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: 'ui-monospace',
   },
   default: {
