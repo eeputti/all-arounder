@@ -1,7 +1,8 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { SectionCard } from '@/components/SectionCard';
-import { Colors } from '@/constants/theme';
+import { YearlyActivityHeatmap } from '@/components/YearlyActivityHeatmap';
+import { YEARLY_ACTIVITY_MOCK } from '@/constants/yearlyActivity';
 import { MOCK_WORKOUTS, WORKOUT_META, WorkoutType } from '@/constants/workouts';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -83,6 +84,11 @@ export default function ProfileScreen() {
               {monthWorkouts.filter((workout) => workout.type === type).length}
             </Text>
           </View>
+
+
+      <SectionCard title="Year in Motion" subtitle="zoomed-out activity map">
+        <YearlyActivityHeatmap data={YEARLY_ACTIVITY_MOCK} />
+      </SectionCard>
 
       <SectionCard title="Streak" subtitle="showing up matters">
         <View style={[styles.streakCard, { backgroundColor: `${palette.tint}1F`, borderColor: `${palette.tint}45` }]}> 
