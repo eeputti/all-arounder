@@ -1,15 +1,11 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { workouts } from '@/constants/movement-data';
+import { SectionCard } from '@/components/SectionCard';
+import { TrainingBalanceCard } from '@/components/TrainingBalanceCard';
+import { MOCK_WORKOUTS, WORKOUT_META, WorkoutType } from '@/constants/workouts';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
-const weeklyMix = [
-  { label: 'Cardio', value: 4, emoji: '💨', color: '#FFD6A5' },
-  { label: 'Strength', value: 3, emoji: '💪', color: '#FDFFB6' },
-  { label: 'Skill', value: 2, emoji: '🎾', color: '#CAFFBF' },
-  { label: 'Recovery', value: 2, emoji: '🧘', color: '#BDE0FE' },
-];
-
-const activeDays = new Set(workouts.map((workout) => workout.date));
+const TRACKED: WorkoutType[] = ['run', 'tennis', 'gym', 'mobility', 'rest'];
 
 export default function HomeScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -27,14 +23,7 @@ export default function HomeScreen() {
 
   const todayWorkouts = workoutsSorted.filter((workout) => workout.date === todayKey);
 
-  const upcomingWorkouts = workoutsSorted.filter((workout) => workout.date > todayKey).slice(0, 5);
-
-  const weeklyWorkouts = workoutsSorted.filter((workout) => {
-    const date = new Date(`${workout.date}T00:00:00`);
-    return date >= weekStart && date <= weekEnd;
-  });
-
-  const workoutTypeCounts = ALL_TYPES.map((type) => ({
+  const weekCounts = TRACKED.map((type) => ({
     type,
     count: weeklyWorkouts.filter((workout) => workout.type === type).length,
   }));
@@ -54,22 +43,37 @@ export default function HomeScreen() {
   })).sort((a, b) => b.minutes - a.minutes)[0];
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Hey mover 🌸</Text>
-      <Text style={styles.subtitle}>Your diary is blooming. Keep the rhythm playful.</Text>
+    <ScrollView
+      style={[styles.container, { backgroundColor: dark ? '#0E1017' : '#F4F6FD' }]}
+      contentContainerStyle={styles.content}>
+      <Text style={[styles.title, { color: dark ? '#F7F8FC' : '#0F1322' }]}>All-Arounder</Text>
+      <Text style={[styles.subtitle, { color: dark ? '#A2A7B6' : '#62697A' }]}>your sport calendar</Text>
 
-      <View style={[styles.card, styles.hero]}>
-        <Text style={styles.heroNumber}>18 day streak 🔥</Text>
-        <Text style={styles.heroText}>You have moved on {activeDays.size} days this month.</Text>
-      </View>
+      <SectionCard title="Today" subtitle={today}>
+        {todayWorkouts.length === 0 ? (
+          <Text style={[styles.placeholder, { color: dark ? '#A5A9B7' : '#646B7D' }]}>
+            No workout logged yet. Tap Add to plan your session.
+          </Text>
+        ) : (
+          todayWorkouts.map((workout) => (
+            <View key={workout.id} style={[styles.row, { borderColor: dark ? '#2C3040' : '#EAEDF6' }]}>
+              <Text style={[styles.rowType, { color: WORKOUT_META[workout.type].color }]}>
+                {WORKOUT_META[workout.type].emoji} {WORKOUT_META[workout.type].label}
+              </Text>
+              <Text style={[styles.rowMeta, { color: dark ? '#CED3E2' : '#32384C' }]}>{workout.duration} min</Text>
+            </View>
+          ))
+        )}
+      </SectionCard>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Weekly training balance</Text>
-        {weeklyMix.map((item) => (
-          <View key={item.label} style={styles.balanceRow}>
-            <Text style={styles.balanceLabel}>{item.emoji} {item.label}</Text>
-            <View style={styles.barTrack}>
-              <View style={[styles.barFill, { width: `${item.value * 20}%`, backgroundColor: item.color }]} />
+      <TrainingBalanceCard />
+
+      <SectionCard title="Weekly volume" subtitle="sessions done this week">
+        <View style={styles.chipWrap}>
+          {weekCounts.map((item) => (
+            <View key={item.type} style={[styles.chip, { backgroundColor: `${WORKOUT_META[item.type].color}1F` }]}>
+              <Text style={[styles.chipValue, { color: WORKOUT_META[item.type].color }]}>{item.count}</Text>
+              <Text style={[styles.chipLabel, { color: dark ? '#DCE0EC' : '#30374B' }]}>{WORKOUT_META[item.type].label}</Text>
             </View>
             <Text style={styles.balanceValue}>{item.value}</Text>
           </View>
@@ -85,19 +89,50 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F2FAFF' },
-  content: { paddingTop: 70, paddingHorizontal: 16, paddingBottom: 32, gap: 14 },
-  title: { fontSize: 34, fontWeight: '800', color: '#264653' },
-  subtitle: { color: '#4E7988', fontSize: 15 },
-  card: { backgroundColor: 'white', borderRadius: 24, padding: 16, borderWidth: 2, borderColor: '#D8F0FF', gap: 10 },
-  hero: { backgroundColor: '#E8F8FF' },
-  heroNumber: { fontSize: 30, fontWeight: '800', color: '#264653' },
-  heroText: { fontSize: 15, color: '#3C6D7A' },
-  cardTitle: { fontSize: 19, fontWeight: '700', color: '#264653' },
-  balanceRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  balanceLabel: { width: 90, color: '#355C68', fontWeight: '600' },
-  barTrack: { flex: 1, height: 12, borderRadius: 20, backgroundColor: '#EFF8FF', overflow: 'hidden' },
-  barFill: { height: '100%', borderRadius: 20 },
-  balanceValue: { color: '#355C68', fontWeight: '700', width: 18, textAlign: 'right' },
-  nudge: { color: '#3C6D7A', fontSize: 15, lineHeight: 22 },
+  container: { flex: 1 },
+  content: {
+    paddingTop: 74,
+    paddingHorizontal: 16,
+    paddingBottom: 28,
+    gap: 14,
+  },
+  title: {
+    fontSize: 34,
+    fontWeight: '800',
+    letterSpacing: -0.6,
+  },
+  subtitle: {
+    marginTop: 4,
+    marginBottom: 6,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  placeholder: { fontSize: 14, lineHeight: 20 },
+  row: {
+    borderBottomWidth: 1,
+    paddingVertical: 10,
+    flexDirection: 'row',
+  },
+  rowType: { fontSize: 15, fontWeight: '700' },
+  rowMeta: { marginLeft: 'auto', fontSize: 14, fontWeight: '600' },
+  chipWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  chip: {
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    minWidth: '47%',
+  },
+  chipValue: {
+    fontSize: 24,
+    fontWeight: '800',
+    marginBottom: 2,
+  },
+  chipLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
 });
