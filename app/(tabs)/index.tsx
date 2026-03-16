@@ -11,13 +11,36 @@ export default function HomeScreen() {
   const scheme = useColorScheme() ?? 'light';
   const dark = scheme === 'dark';
 
-  const today = new Date().toISOString().slice(0, 10);
-  const todayWorkouts = MOCK_WORKOUTS.filter((workout) => workout.date === today);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const todayKey = getDateKey(today);
+  const weekStart = getWeekStart(today);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 6);
+
+  const workoutsSorted = [...MOCK_WORKOUTS].sort((a, b) => a.date.localeCompare(b.date));
+
+  const todayWorkouts = workoutsSorted.filter((workout) => workout.date === todayKey);
 
   const weekCounts = TRACKED.map((type) => ({
     type,
-    count: MOCK_WORKOUTS.slice(-7).filter((workout) => workout.type === type).length,
+    count: weeklyWorkouts.filter((workout) => workout.type === type).length,
   }));
+
+  const totalSessions = weeklyWorkouts.length;
+  const movementSessions = weeklyWorkouts.filter((workout) => workout.type !== 'rest').length;
+  const movementMinutes = weeklyWorkouts.reduce((sum, workout) => sum + workout.duration, 0);
+  const activeDays = new Set(weeklyWorkouts.filter((workout) => workout.type !== 'rest').map((workout) => workout.date)).size;
+
+  const movementStreak = getMovementStreak(workoutsSorted, todayKey);
+
+  const topType = MOVEMENT_TYPES.map((type) => ({
+    type,
+    minutes: weeklyWorkouts
+      .filter((workout) => workout.type === type)
+      .reduce((sum, workout) => sum + workout.duration, 0),
+  })).sort((a, b) => b.minutes - a.minutes)[0];
 
   return (
     <ScrollView
@@ -52,9 +75,15 @@ export default function HomeScreen() {
               <Text style={[styles.chipValue, { color: WORKOUT_META[item.type].color }]}>{item.count}</Text>
               <Text style={[styles.chipLabel, { color: dark ? '#DCE0EC' : '#30374B' }]}>{WORKOUT_META[item.type].label}</Text>
             </View>
-          ))}
-        </View>
-      </SectionCard>
+            <Text style={styles.balanceValue}>{item.value}</Text>
+          </View>
+        ))}
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Today&apos;s delightful nudge</Text>
+        <Text style={styles.nudge}>✨ 20-minute easy move + 5-minute stretch = gold star energy.</Text>
+      </View>
     </ScrollView>
   );
 }

@@ -1,5 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { MOOD_META, WorkoutMood } from '@/constants/moods';
+
 export type WorkoutType = 'run' | 'tennis' | 'gym' | 'mobility' | 'rest';
 
 export type WorkoutEntry = {
@@ -8,6 +10,7 @@ export type WorkoutEntry = {
   duration: string;
   notes: string;
   date: string;
+  mood: WorkoutMood;
 };
 
 type WorkoutDayProps = {
@@ -29,6 +32,7 @@ const WORKOUT_STYLE: Record<WorkoutType, { color: string; icon: string }> = {
 export function WorkoutDay({ day, workouts, isCurrentMonth, isToday, onPress }: WorkoutDayProps) {
   const visibleWorkouts = workouts.slice(0, 3);
   const hiddenCount = workouts.length - visibleWorkouts.length;
+  const highlightMood = workouts[0]?.mood;
 
   return (
     <Pressable
@@ -40,9 +44,16 @@ export function WorkoutDay({ day, workouts, isCurrentMonth, isToday, onPress }: 
       ]}
       onPress={onPress}
     >
-      <Text style={[styles.dayLabel, !isCurrentMonth && styles.fadedText, isToday && styles.todayText]}>
-        {day}
-      </Text>
+      <View style={styles.dayTopRow}>
+        <Text style={[styles.dayLabel, !isCurrentMonth && styles.fadedText, isToday && styles.todayText]}>
+          {day}
+        </Text>
+        {highlightMood ? (
+          <View style={[styles.moodBadge, { backgroundColor: `${MOOD_META[highlightMood].color}35` }]}>
+            <Text style={styles.moodBadgeEmoji}>{MOOD_META[highlightMood].emoji}</Text>
+          </View>
+        ) : null}
+      </View>
 
       <View style={styles.indicatorRow}>
         {visibleWorkouts.map((workout) => (
@@ -85,10 +96,26 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.98 }],
     opacity: 0.9,
   },
+  dayTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 4,
+  },
   dayLabel: {
     fontSize: 17,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  moodBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  moodBadgeEmoji: {
+    fontSize: 12,
   },
   fadedText: {
     color: '#636366',

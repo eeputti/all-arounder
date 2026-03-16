@@ -104,7 +104,34 @@ const styles = StyleSheet.create({
   rows: {
     gap: 11,
   },
-  row: {
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  score: {
+    fontSize: 24,
+    fontWeight: '800',
+    letterSpacing: -0.4,
+  },
+  subtitle: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  segmentTrack: {
+    height: 12,
+    borderRadius: 999,
+    overflow: 'hidden',
+    flexDirection: 'row',
+  },
+  segment: {
+    height: '100%',
+  },
+  rows: {
     gap: 8,
   },
   rowHeader: {
@@ -115,12 +142,14 @@ const styles = StyleSheet.create({
   labelWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
   },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 999,
+  rowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  emoji: {
+    fontSize: 14,
   },
   label: {
     fontSize: 14,
