@@ -95,13 +95,13 @@ export default function CalendarScreen() {
       return;
     }
 
-  const workoutsByDate = useMemo(() => {
-    return workouts.reduce<Record<string, typeof workouts>>((acc, workout) => {
-      if (!acc[workout.date]) acc[workout.date] = [];
-      acc[workout.date].push(workout);
-      return acc;
-    }, {});
-  }, []);
+    const nextWorkout: Workout = {
+      id: `${selectedDay}-${Date.now()}`,
+      title: newWorkout.title.trim(),
+      duration: newWorkout.duration.trim(),
+      notes: newWorkout.notes.trim(),
+      emoji: newWorkout.emoji.trim() || '🏃',
+    };
 
     setWorkoutsByDay((current) => ({
       ...current,
@@ -316,11 +316,11 @@ export default function CalendarScreen() {
                 </Pressable>
               </View>
             </ScrollView>
-            <Pressable style={styles.closeBtn} onPress={() => setShowDetail(false)}>
-              <Text style={styles.closeText}>Done ✨</Text>
+            <Pressable style={[styles.secondaryAction, { backgroundColor: palette.inputBackground }]} onPress={closeSheet}>
+              <Text style={[styles.actionText, { color: palette.text }]}>Done ✨</Text>
             </Pressable>
-          </View>
-        </View>
+          </Pressable>
+        </Pressable>
       </Modal>
     </ScrollView>
   );

@@ -12,20 +12,19 @@ type SectionCardProps = PropsWithChildren<{
 export function SectionCard({ title, subtitle, children }: SectionCardProps) {
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
-
   return (
     <View
       style={[
         styles.card,
         {
-          backgroundColor: dark ? '#12182B' : '#FFFFFF',
-          borderColor: dark ? '#242B43' : '#E4EAFB',
-          shadowColor: dark ? '#000000' : '#8EA5E2',
+          backgroundColor: palette.card,
+          borderColor: palette.cardBorder,
+          shadowColor: palette.cardShadow,
         },
       ]}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: dark ? '#F4F7FF' : '#121A33' }]}>{title}</Text>
-        {subtitle ? <Text style={[styles.subtitle, { color: dark ? '#AAB4D4' : '#667299' }]}>{subtitle}</Text> : null}
+        <Text style={[styles.title, { color: palette.text }]}>{title}</Text>
+        {subtitle ? <Text style={[styles.subtitle, { color: palette.mutedText }]}>{subtitle}</Text> : null}
       </View>
       {children}
     </View>
