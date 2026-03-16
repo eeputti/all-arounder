@@ -1,7 +1,6 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { SectionCard } from '@/components/SectionCard';
-import { TrainingBalanceCard } from '@/components/TrainingBalanceCard';
 import { WORKOUT_META, MOCK_WORKOUTS, WorkoutType } from '@/constants/workouts';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -16,6 +15,13 @@ const trainingBalance = [
 
 const totalMinutes = trainingBalance.reduce((total, entry) => total + entry.minutes, 0);
 
+const formatDate = (date: string) =>
+  new Date(`${date}T00:00:00`).toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+
 export default function HomeScreen() {
   const scheme = useColorScheme() ?? 'light';
   const dark = scheme === 'dark';
@@ -23,7 +29,7 @@ export default function HomeScreen() {
   const today = new Date().toISOString().slice(0, 10);
   const todayWorkouts = MOCK_WORKOUTS.filter((workout) => workout.date === today);
 
-  const upcomingWorkouts = MOCK_WORKOUTS.filter((workout) => workout.date >= today).slice(0, 4);
+  const upcomingWorkouts = MOCK_WORKOUTS.filter((workout) => workout.date >= today).slice(0, 3);
 
   const weekCounts = TRACKED.map((type) => ({
     type,
@@ -32,25 +38,37 @@ export default function HomeScreen() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: dark ? '#0E0F13' : '#F4F6FD' }]}
-      contentContainerStyle={styles.content}>
-      <Text style={[styles.title, { color: dark ? '#F7F8FC' : '#0F1322' }]}>All-Arounder</Text>
-      <Text style={[styles.subtitle, { color: dark ? '#A2A7B6' : '#62697A' }]}>your sport calendar</Text>
+      style={[styles.container, { backgroundColor: dark ? '#0C0F1A' : '#F4F7FF' }]}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}>
+      <View style={styles.heroTopRow}>
+        <Text style={[styles.title, { color: dark ? '#F8F9FF' : '#12172A' }]}>All-Arounder</Text>
+        <View style={[styles.streakPill, { backgroundColor: dark ? '#212843' : '#E8EEFF' }]}>
+          <Text style={styles.streakEmoji}>✨</Text>
+          <Text style={[styles.streakText, { color: dark ? '#D9E4FF' : '#3158CC' }]}>7-day streak</Text>
+        </View>
+      </View>
+      <Text style={[styles.subtitle, { color: dark ? '#AEB6D2' : '#59617B' }]}>Move joyfully. Recover intentionally.</Text>
 
-      <SectionCard title="Today" subtitle={today}>
+      <SectionCard title="Today" subtitle={formatDate(today)}>
         {todayWorkouts.length === 0 ? (
-          <Text style={[styles.placeholder, { color: dark ? '#A5A9B7' : '#646B7D' }]}>No workout logged yet. Tap Add to plan your session.</Text>
+          <Text style={[styles.placeholder, { color: dark ? '#AAB2CC' : '#646F89' }]}>No workout logged yet. Tap Add to plan your next feel-good session.</Text>
         ) : (
-          todayWorkouts.map((workout) => (
-            <View key={workout.id} style={[styles.row, { borderColor: dark ? '#2C3040' : '#EAEDF6' }]}>
-              <Text style={[styles.rowType, { color: WORKOUT_META[workout.type].color }]}>{WORKOUT_META[workout.type].label}</Text>
-              <Text style={[styles.rowMeta, { color: dark ? '#CED3E2' : '#32384C' }]}>{workout.duration} min</Text>
-            </View>
-          ))
+          <View style={styles.todayList}>
+            {todayWorkouts.map((workout) => (
+              <View key={workout.id} style={[styles.todayRow, { backgroundColor: dark ? '#1E243A' : '#F1F5FF' }]}>
+                <Text style={styles.todayEmoji}>{WORKOUT_META[workout.type].emoji}</Text>
+                <View>
+                  <Text style={[styles.rowType, { color: dark ? '#F3F5FF' : '#1B2240' }]}>{WORKOUT_META[workout.type].label}</Text>
+                  <Text style={[styles.rowMeta, { color: dark ? '#AEB7D4' : '#5D6885' }]}>{workout.duration} minutes</Text>
+                </View>
+              </View>
+            ))}
+          </View>
         )}
       </SectionCard>
 
-      <View style={styles.card}>
+      <View style={[styles.balanceCard, { backgroundColor: dark ? '#141A2D' : '#11172B' }]}>
         <Text style={styles.cardTitle}>training balance</Text>
         <Text style={styles.balanceSubtitle}>Minutes by sport this week</Text>
 
@@ -84,22 +102,36 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <View style={styles.actionsRow}>
-        <Pressable style={styles.button}>
-          <Text style={styles.buttonText}>add run</Text>
-        </Pressable>
-
-      <SectionCard title="Weekly Training Balance" subtitle="distribution by sport">
-        <TrainingBalanceCard workouts={MOCK_WORKOUTS.slice(-7)} />
+      <SectionCard title="Coming up" subtitle="Your next sessions">
+        {upcomingWorkouts.length === 0 ? (
+          <Text style={[styles.placeholder, { color: dark ? '#AAB2CC' : '#646F89' }]}>Nothing on the schedule yet — add something that sounds fun.</Text>
+        ) : (
+          upcomingWorkouts.map((workout) => (
+            <View key={workout.id} style={[styles.upcomingRow, { borderColor: dark ? '#292F49' : '#E2E8FA' }]}>
+              <Text style={[styles.upcomingDate, { color: dark ? '#B0B8D6' : '#64708E' }]}>{formatDate(workout.date)}</Text>
+              <Text style={styles.upcomingEmoji}>{WORKOUT_META[workout.type].emoji}</Text>
+              <Text style={[styles.upcomingType, { color: dark ? '#EEF1FF' : '#1D2442' }]}>{WORKOUT_META[workout.type].label}</Text>
+              <Text style={[styles.upcomingDuration, { color: dark ? '#CAD2EF' : '#3A4669' }]}>{workout.duration}m</Text>
+            </View>
+          ))
+        )}
       </SectionCard>
 
-      <SectionCard title="Weekly Volume" subtitle="sessions done this week">
+      <SectionCard title="Weekly volume" subtitle="Tiny wins add up">
         <View style={styles.chipWrap}>
           {weekCounts.map((item) => (
-            <View key={item.type} style={[styles.chip, { backgroundColor: `${WORKOUT_META[item.type].color}1F` }]}>
+            <Pressable
+              key={item.type}
+              style={({ pressed }) => [
+                styles.chip,
+                {
+                  backgroundColor: dark ? '#1A2034' : `${WORKOUT_META[item.type].color}17`,
+                  transform: [{ scale: pressed ? 0.98 : 1 }],
+                },
+              ]}>
               <Text style={[styles.chipValue, { color: WORKOUT_META[item.type].color }]}>{item.count}</Text>
-              <Text style={[styles.chipLabel, { color: dark ? '#DCE0EC' : '#30374B' }]}>{WORKOUT_META[item.type].label}</Text>
-            </View>
+              <Text style={[styles.chipLabel, { color: dark ? '#DEE3F7' : '#303A57' }]}>{WORKOUT_META[item.type].label}</Text>
+            </Pressable>
           ))}
         </View>
       </SectionCard>
@@ -113,46 +145,98 @@ const styles = StyleSheet.create({
     paddingTop: 74,
     paddingHorizontal: 16,
     paddingBottom: 28,
+    gap: 2,
+  },
+  heroTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   title: {
-    fontSize: 34,
+    fontSize: 35,
     fontWeight: '800',
-    letterSpacing: -0.6,
+    letterSpacing: -0.8,
   },
   subtitle: {
-    marginTop: 4,
+    marginTop: 8,
     marginBottom: 18,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '500',
   },
-  placeholder: { fontSize: 14, lineHeight: 20 },
-  row: {
-    borderBottomWidth: 1,
-    paddingVertical: 10,
+  streakPill: {
+    borderRadius: 999,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
     flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
-  rowType: { fontSize: 15, fontWeight: '700' },
-  rowMeta: { marginLeft: 'auto', fontSize: 14, fontWeight: '600' },
-  upcomingRow: {
+  streakEmoji: {
+    fontSize: 12,
+  },
+  streakText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  placeholder: { fontSize: 14, lineHeight: 21 },
+  todayList: {
+    gap: 10,
+  },
+  todayRow: {
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    paddingVertical: 8,
+  },
+  todayEmoji: {
+    fontSize: 22,
+  },
+  rowType: { fontSize: 15, fontWeight: '700' },
+  rowMeta: { marginTop: 2, fontSize: 13, fontWeight: '500' },
+  upcomingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 11,
+    borderBottomWidth: 1,
   },
   upcomingDate: {
-    width: 50,
-    fontSize: 13,
+    width: 80,
+    fontSize: 12,
     fontWeight: '700',
+  },
+  upcomingEmoji: {
+    fontSize: 17,
   },
   upcomingType: {
     fontSize: 14,
     fontWeight: '700',
     flex: 1,
   },
+  upcomingDuration: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  balanceCard: {
+    borderRadius: 28,
+    padding: 18,
+    marginBottom: 14,
+  },
+  cardTitle: {
+    color: '#f4f7ff',
+    fontSize: 20,
+    fontWeight: '800',
+    textTransform: 'capitalize',
+    letterSpacing: -0.3,
+  },
   balanceSubtitle: {
-    color: '#8e8e93',
-    fontSize: 14,
-    marginBottom: 16,
+    color: '#AEB8D4',
+    fontSize: 13,
+    marginTop: 4,
+    marginBottom: 15,
+    fontWeight: '500',
   },
   balanceRows: {
     gap: 12,
@@ -169,15 +253,17 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 15,
     textTransform: 'capitalize',
+    fontWeight: '600',
   },
   balanceValue: {
-    color: '#d1d1d6',
-    fontSize: 14,
+    color: '#d1d7ec',
+    fontSize: 13,
+    fontWeight: '500',
   },
   balanceTrack: {
     width: '100%',
     height: 10,
-    backgroundColor: '#2c2c2e',
+    backgroundColor: '#2d3553',
     borderRadius: 999,
     overflow: 'hidden',
   },
@@ -185,17 +271,19 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 999,
   },
-  actionsRow: {
+  chipWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 10,
   },
   chip: {
-    borderRadius: 16,
+    borderRadius: 18,
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 12,
     minWidth: '47%',
   },
   chipValue: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '800',
     marginBottom: 2,
   },

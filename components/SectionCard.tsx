@@ -16,11 +16,15 @@ export function SectionCard({ title, subtitle, children }: SectionCardProps) {
     <View
       style={[
         styles.card,
-        { backgroundColor: dark ? '#17181C' : '#FFFFFF', borderColor: dark ? '#23262D' : '#E8E8EF' },
+        {
+          backgroundColor: dark ? '#12182B' : '#FFFFFF',
+          borderColor: dark ? '#242B43' : '#E4EAFB',
+          shadowColor: dark ? '#000000' : '#8EA5E2',
+        },
       ]}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: dark ? '#FAFAFC' : '#12131A' }]}>{title}</Text>
-        {subtitle ? <Text style={[styles.subtitle, { color: dark ? '#A6A8B3' : '#6A6D79' }]}>{subtitle}</Text> : null}
+        <Text style={[styles.title, { color: dark ? '#F4F7FF' : '#121A33' }]}>{title}</Text>
+        {subtitle ? <Text style={[styles.subtitle, { color: dark ? '#AAB4D4' : '#667299' }]}>{subtitle}</Text> : null}
       </View>
       {children}
     </View>
@@ -30,17 +34,23 @@ export function SectionCard({ title, subtitle, children }: SectionCardProps) {
 const styles = StyleSheet.create({
   card: {
     borderWidth: 1,
-    borderRadius: 22,
+    borderRadius: 26,
     padding: 16,
     marginBottom: 14,
+    shadowOpacity: 0.14,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 7 },
+    elevation: 3,
   },
   header: {
     marginBottom: 14,
-    gap: 3,
+    gap: 4,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: -0.4,
+    textTransform: 'capitalize',
   },
   subtitle: {
     fontSize: 13,
