@@ -157,6 +157,33 @@ const emptyWorkout = {
   emoji: '🏃',
 };
 
+function toKey(date: Date) {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function formatMonth(date: Date) {
+  return date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+}
+
+function buildMonthGrid(viewMonth: Date): CalendarCell[] {
+  const year = viewMonth.getFullYear();
+  const month = viewMonth.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const mondayBasedOffset = (firstDay.getDay() + 6) % 7;
+
+  const cells: CalendarCell[] = [];
+
+  for (let i = 0; i < 42; i += 1) {
+    const date = new Date(year, month, i + 1 - mondayBasedOffset);
+    cells.push({ date, inCurrentMonth: date.getMonth() === month });
+  }
+
+  return cells;
+}
+
 export default function CalendarScreen() {
   const [workoutsByDay, setWorkoutsByDay] =
     useState<Record<number, Workout[]>>(initialWorkoutsByDay);
@@ -272,14 +299,27 @@ export default function CalendarScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Monthly Sports Calendar</Text>
-      <Text style={styles.subtitle}>October 2026</Text>
+    <ScrollView style={[styles.container, { backgroundColor: dark ? '#0E0F13' : '#F4F6FD' }]} contentContainerStyle={styles.content}>
+      <Text style={[styles.title, { color: dark ? '#F8F9FD' : '#111423' }]}>Training Calendar</Text>
 
-      <View style={styles.calendarCard}>
+      <View style={styles.monthHeader}>
+        <Pressable
+          onPress={() => setSelectedMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
+          style={[styles.monthButton, { backgroundColor: dark ? '#191B23' : '#FFFFFF' }]}>
+          <Text style={[styles.monthButtonText, { color: dark ? '#D7DBE9' : '#27304A' }]}>‹</Text>
+        </Pressable>
+        <Text style={[styles.monthTitle, { color: dark ? '#F8F9FD' : '#121628' }]}>{monthTitle}</Text>
+        <Pressable
+          onPress={() => setSelectedMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
+          style={[styles.monthButton, { backgroundColor: dark ? '#191B23' : '#FFFFFF' }]}>
+          <Text style={[styles.monthButtonText, { color: dark ? '#D7DBE9' : '#27304A' }]}>›</Text>
+        </Pressable>
+      </View>
+
+      <View style={[styles.calendarCard, { backgroundColor: dark ? '#12141A' : '#FFFFFF', borderColor: dark ? '#242838' : '#E7E9F2' }]}>
         <View style={styles.weekRow}>
-          {weekDays.map((day) => (
-            <Text key={day} style={styles.weekDay}>
+          {WEEKDAYS.map((day) => (
+            <Text key={day} style={[styles.weekday, { color: dark ? '#9CA2B5' : '#697189' }]}>
               {day}
             </Text>
           ))}
@@ -453,39 +493,22 @@ export default function CalendarScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0f0f10',
-    paddingTop: 90,
-    paddingHorizontal: 20,
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: '700',
-    color: '#ffffff',
-  },
-  subtitle: {
-    marginTop: 6,
-    marginBottom: 20,
-    fontSize: 18,
-    color: '#8e8e93',
-  },
-  calendarCard: {
-    backgroundColor: '#1c1c1e',
+  container: { flex: 1 },
+  content: { paddingTop: 74, paddingHorizontal: 16, paddingBottom: 28 },
+  title: { fontSize: 32, fontWeight: '800', marginBottom: 16 },
+  monthHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  monthButton: { width: 38, height: 38, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  monthButtonText: { fontSize: 24, fontWeight: '500' },
+  monthTitle: { fontSize: 20, fontWeight: '700' },
+  calendarCard: { borderRadius: 24, padding: 12, borderWidth: 1 },
+  weekRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+  weekday: { width: '13.7%', textAlign: 'center', fontSize: 12, fontWeight: '700' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 5 },
+  legendCard: {
+    borderWidth: 1,
     borderRadius: 20,
     padding: 14,
-  },
-  weekRow: {
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  weekDay: {
-    flex: 1,
-    textAlign: 'center',
-    color: '#8e8e93',
-    fontWeight: '600',
-  },
-  grid: {
+    marginTop: 14,
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
