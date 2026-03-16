@@ -1,23 +1,14 @@
-import { useMemo, useRef, useState } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-type WorkoutType = 'run' | 'gym' | 'tennis' | 'cycle' | 'swim' | 'football';
+import { CalendarDay } from '@/components/CalendarDay';
+import { DayDetailsModal } from '@/components/DayDetailsModal';
+import { WORKOUT_META, MOCK_WORKOUTS, Workout } from '@/constants/workouts';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
-type CalendarCell = {
-  date: Date;
-  inCurrentMonth: boolean;
-};
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-const workoutStyles: Record<WorkoutType, { label: string; color: string }> = {
-  run: { label: 'Run', color: '#FF6B9D' },
-  gym: { label: 'Gym', color: '#7A77FF' },
-  tennis: { label: 'Tennis', color: '#3FD1FF' },
-  cycle: { label: 'Cycle', color: '#FFB84C' },
-  swim: { label: 'Swim', color: '#5DE8A5' },
-  football: { label: 'Football', color: '#FF7C5C' },
-};
+const iso = (date: Date) => date.toISOString().slice(0, 10);
 
 const demoWorkouts: Record<string, WorkoutType[]> = {
   '2026-10-02': ['run'],
@@ -60,232 +51,130 @@ function buildMonthGrid(viewMonth: Date): CalendarCell[] {
 }
 
 export default function CalendarScreen() {
-  const [visibleMonth, setVisibleMonth] = useState(new Date(2026, 9, 1));
-  const [transitionDirection, setTransitionDirection] = useState<1 | -1>(1);
-  const transition = useRef(new Animated.Value(1)).current;
-  const todayKey = useMemo(() => toKey(new Date()), []);
+  const scheme = useColorScheme() ?? 'light';
+  const dark = scheme === 'dark';
+  const today = new Date();
 
-  const calendarDays = useMemo(() => buildMonthGrid(visibleMonth), [visibleMonth]);
+  const [selectedMonth, setSelectedMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
-  const transitionMonth = (direction: 1 | -1) => {
-    setTransitionDirection(direction);
+  const grid = useMemo(() => {
+    const year = selectedMonth.getFullYear();
+    const month = selectedMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const leading = (firstDay.getDay() + 6) % 7;
 
-    Animated.timing(transition, {
-      toValue: 0,
-      duration: 160,
-      useNativeDriver: true,
-    }).start(() => {
-      setVisibleMonth((current) => new Date(current.getFullYear(), current.getMonth() + direction, 1));
-      transition.setValue(0);
+    const cells: { date: Date; isCurrentMonth: boolean }[] = [];
 
-      Animated.spring(transition, {
-        toValue: 1,
-        speed: 15,
-        bounciness: 6,
-        useNativeDriver: true,
-      }).start();
-    });
-  };
+    for (let i = leading; i > 0; i -= 1) {
+      cells.push({ date: new Date(year, month, 1 - i), isCurrentMonth: false });
+    }
 
-  const animatedStyle = {
-    opacity: transition,
-    transform: [
-      {
-        translateX: transition.interpolate({
-          inputRange: [0, 1],
-          outputRange: [18 * transitionDirection, 0],
-        }),
-      },
-    ],
-  };
+    for (let day = 1; day <= daysInMonth; day += 1) {
+      cells.push({ date: new Date(year, month, day), isCurrentMonth: true });
+    }
+
+    const trailing = (7 - (cells.length % 7)) % 7;
+    for (let i = 1; i <= trailing; i += 1) {
+      cells.push({ date: new Date(year, month + 1, i), isCurrentMonth: false });
+    }
+
+    return cells;
+  }, [selectedMonth]);
+
+  const selectedWorkouts: Workout[] = selectedDate
+    ? MOCK_WORKOUTS.filter((workout) => workout.date === selectedDate)
+    : [];
+
+  const monthTitle = selectedMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 
   return (
-    <View style={styles.container}>
-      <View style={styles.headerWrap}>
-        <Text style={styles.title}>Monthly Training Calendar</Text>
-        <Text style={styles.subtitle}>Bright plans for a happy, active month</Text>
+    <ScrollView style={[styles.container, { backgroundColor: dark ? '#0E0F13' : '#F4F6FD' }]} contentContainerStyle={styles.content}>
+      <Text style={[styles.title, { color: dark ? '#F8F9FD' : '#111423' }]}>Training Calendar</Text>
+
+      <View style={styles.monthHeader}>
+        <Pressable
+          onPress={() => setSelectedMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
+          style={[styles.monthButton, { backgroundColor: dark ? '#191B23' : '#FFFFFF' }]}>
+          <Text style={[styles.monthButtonText, { color: dark ? '#D7DBE9' : '#27304A' }]}>‹</Text>
+        </Pressable>
+        <Text style={[styles.monthTitle, { color: dark ? '#F8F9FD' : '#121628' }]}>{monthTitle}</Text>
+        <Pressable
+          onPress={() => setSelectedMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
+          style={[styles.monthButton, { backgroundColor: dark ? '#191B23' : '#FFFFFF' }]}>
+          <Text style={[styles.monthButtonText, { color: dark ? '#D7DBE9' : '#27304A' }]}>›</Text>
+        </Pressable>
       </View>
 
-      <View style={styles.calendarCard}>
-        <View style={styles.monthHeader}>
-          <Pressable style={styles.navButton} onPress={() => transitionMonth(-1)}>
-            <Text style={styles.navButtonLabel}>‹</Text>
-          </Pressable>
-          <Text style={styles.monthLabel}>{formatMonth(visibleMonth)}</Text>
-          <Pressable style={styles.navButton} onPress={() => transitionMonth(1)}>
-            <Text style={styles.navButtonLabel}>›</Text>
-          </Pressable>
-        </View>
-
+      <View style={[styles.calendarCard, { backgroundColor: dark ? '#12141A' : '#FFFFFF', borderColor: dark ? '#242838' : '#E7E9F2' }]}>
         <View style={styles.weekRow}>
-          {weekDays.map((day) => (
-            <Text key={day} style={styles.weekDay}>
+          {WEEKDAYS.map((day) => (
+            <Text key={day} style={[styles.weekday, { color: dark ? '#9CA2B5' : '#697189' }]}>
               {day}
             </Text>
           ))}
         </View>
 
-        <Animated.View style={[styles.grid, animatedStyle]}>
-          {calendarDays.map(({ date, inCurrentMonth }) => {
-            const dateKey = toKey(date);
-            const workouts = demoWorkouts[dateKey] ?? [];
-            const isToday = dateKey === todayKey;
-
+        <View style={styles.grid}>
+          {grid.map((cell) => {
+            const dateString = iso(cell.date);
+            const workouts = MOCK_WORKOUTS.filter((workout) => workout.date === dateString);
             return (
-              <View
-                key={dateKey}
-                style={[
-                  styles.cell,
-                  !inCurrentMonth && styles.fadedCell,
-                  isToday && styles.todayCell,
-                ]}>
-                <Text style={[styles.dayNumber, !inCurrentMonth && styles.fadedText, isToday && styles.todayText]}>
-                  {date.getDate()}
-                </Text>
-
-                <View style={styles.pillsRow}>
-                  {workouts.slice(0, 2).map((workout) => (
-                    <View
-                      key={`${dateKey}-${workout}`}
-                      style={[styles.workoutPill, { backgroundColor: workoutStyles[workout].color }]}
-                    >
-                      <Text style={styles.workoutPillText}>{workoutStyles[workout].label}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
+              <CalendarDay
+                key={dateString}
+                dayNumber={cell.date.getDate()}
+                isCurrentMonth={cell.isCurrentMonth}
+                isToday={dateString === iso(today)}
+                workouts={workouts}
+                onPress={() => setSelectedDate(dateString)}
+              />
             );
           })}
-        </Animated.View>
+        </View>
       </View>
-    </View>
+
+      <View style={[styles.legendCard, { backgroundColor: dark ? '#12141A' : '#FFFFFF', borderColor: dark ? '#242838' : '#E7E9F2' }]}>
+        {Object.entries(WORKOUT_META).map(([type, meta]) => (
+          <View key={type} style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: meta.color }]} />
+            <Text style={[styles.legendText, { color: dark ? '#E1E5F3' : '#2A2F43' }]}>{meta.label}</Text>
+          </View>
+        ))}
+      </View>
+
+      <DayDetailsModal
+        visible={Boolean(selectedDate)}
+        selectedDate={selectedDate ?? ''}
+        workouts={selectedWorkouts}
+        onClose={() => setSelectedDate(null)}
+      />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F0F7FF',
-    paddingTop: 78,
-    paddingHorizontal: 18,
-  },
-  headerWrap: {
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 31,
-    fontWeight: '800',
-    color: '#2D1E66',
-    letterSpacing: 0.2,
-  },
-  subtitle: {
-    marginTop: 7,
-    fontSize: 15,
-    color: '#5D64A6',
-    fontWeight: '600',
-  },
-  calendarCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 28,
-    padding: 16,
-    shadowColor: '#5836BA',
-    shadowOpacity: 0.14,
-    shadowOffset: { width: 0, height: 12 },
-    shadowRadius: 22,
-    elevation: 7,
-  },
-  monthHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 14,
-  },
-  monthLabel: {
-    fontSize: 21,
-    fontWeight: '800',
-    color: '#34206B',
-  },
-  navButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#EDE7FF',
-  },
-  navButtonLabel: {
-    fontSize: 24,
-    lineHeight: 24,
-    color: '#6A4AD5',
-    fontWeight: '700',
-  },
-  weekRow: {
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  weekDay: {
-    flex: 1,
-    textAlign: 'center',
-    color: '#7D7CAE',
-    fontWeight: '700',
-    fontSize: 12,
-  },
-  grid: {
+  container: { flex: 1 },
+  content: { paddingTop: 74, paddingHorizontal: 16, paddingBottom: 28 },
+  title: { fontSize: 32, fontWeight: '800', marginBottom: 16 },
+  monthHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  monthButton: { width: 38, height: 38, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  monthButtonText: { fontSize: 24, fontWeight: '500' },
+  monthTitle: { fontSize: 20, fontWeight: '700' },
+  calendarCard: { borderRadius: 24, padding: 12, borderWidth: 1 },
+  weekRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+  weekday: { width: '13.7%', textAlign: 'center', fontSize: 12, fontWeight: '700' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 5 },
+  legendCard: {
+    borderWidth: 1,
+    borderRadius: 20,
+    padding: 14,
+    marginTop: 14,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    rowGap: 9,
+    gap: 12,
   },
-  cell: {
-    width: '13.3%',
-    minHeight: 66,
-    borderRadius: 18,
-    paddingVertical: 6,
-    paddingHorizontal: 3,
-    backgroundColor: '#F6F4FF',
-    alignItems: 'center',
-  },
-  fadedCell: {
-    backgroundColor: '#F5F2FA',
-    opacity: 0.55,
-  },
-  todayCell: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 2,
-    borderColor: '#74D6FF',
-    shadowColor: '#44CBFF',
-    shadowOpacity: 0.45,
-    shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  dayNumber: {
-    color: '#332B67',
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  fadedText: {
-    color: '#9A96B8',
-  },
-  todayText: {
-    color: '#246AA8',
-  },
-  pillsRow: {
-    width: '100%',
-    marginTop: 4,
-    alignItems: 'center',
-    gap: 3,
-  },
-  workoutPill: {
-    minWidth: '85%',
-    borderRadius: 999,
-    paddingVertical: 1,
-    paddingHorizontal: 6,
-  },
-  workoutPillText: {
-    color: '#FFFFFF',
-    fontSize: 9,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  legendDot: { width: 10, height: 10, borderRadius: 99 },
+  legendText: { fontSize: 13, fontWeight: '600' },
 });
