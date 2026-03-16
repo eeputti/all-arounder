@@ -1,10 +1,22 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { SectionCard } from '@/components/SectionCard';
-import { MOCK_WORKOUTS, WORKOUT_META, WorkoutType } from '@/constants/workouts';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+const heat = [
+  [0, 1, 2, 1, 3, 0, 2, 2, 1, 0, 3, 2],
+  [1, 2, 2, 3, 1, 0, 1, 3, 2, 2, 1, 0],
+  [0, 1, 3, 2, 1, 2, 2, 1, 3, 1, 0, 2],
+  [1, 3, 2, 1, 0, 1, 3, 2, 2, 1, 2, 1],
+  [2, 1, 0, 2, 3, 2, 1, 0, 1, 3, 2, 2],
+  [3, 2, 1, 0, 2, 1, 3, 2, 1, 0, 2, 3],
+];
 
-const TYPES: WorkoutType[] = ['run', 'tennis', 'gym', 'mobility'];
+const intensity = ['#F2F4F8', '#D0F4DE', '#A9DEF9', '#E4C1F9'];
+
+const stats = [
+  { label: 'Minutes moved', value: '1,287', emoji: '⏱️' },
+  { label: 'Workouts logged', value: '46', emoji: '📝' },
+  { label: 'Favorite vibe', value: 'Joyful', emoji: '🌈' },
+  { label: 'Longest streak', value: '21 days', emoji: '🔥' },
+];
 
 export default function ProfileScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -17,62 +29,51 @@ export default function ProfileScreen() {
   const streak = 6;
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: dark ? '#0E0F13' : '#F4F6FD' }]} contentContainerStyle={styles.content}>
-      <Text style={[styles.title, { color: dark ? '#F7F8FC' : '#101424' }]}>Profile</Text>
-      <Text style={[styles.subtitle, { color: dark ? '#A1A6B6' : '#646B7C' }]}>Consistency and monthly stats</Text>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Text style={styles.title}>Cute stats corner</Text>
+      <Text style={styles.subtitle}>Your movement story in sparkles and squares.</Text>
 
-      <SectionCard title="This Month" subtitle="training snapshot">
-        <View style={styles.statRow}>
-          <Text style={[styles.statLabel, { color: dark ? '#DFE3EF' : '#283049' }]}>Total Workouts</Text>
-          <Text style={[styles.statValue, { color: dark ? '#F6F8FE' : '#151A2D' }]}>{monthWorkouts.length}</Text>
-        </View>
-
-        {TYPES.map((type) => (
-          <View key={type} style={styles.statRow}>
-            <Text style={[styles.statLabel, { color: WORKOUT_META[type].color }]}>{WORKOUT_META[type].label}</Text>
-            <Text style={[styles.statValue, { color: dark ? '#F6F8FE' : '#151A2D' }]}>
-              {monthWorkouts.filter((workout) => workout.type === type).length}
-            </Text>
+      <View style={styles.statsGrid}>
+        {stats.map((stat) => (
+          <View key={stat.label} style={styles.statCard}>
+            <Text style={styles.emoji}>{stat.emoji}</Text>
+            <Text style={styles.value}>{stat.value}</Text>
+            <Text style={styles.label}>{stat.label}</Text>
           </View>
         ))}
-      </SectionCard>
+      </View>
 
-      <SectionCard title="Streak" subtitle="showing up matters">
-        <View style={styles.streakCard}>
-          <Text style={styles.streakEmoji}>🔥</Text>
-          <View>
-            <Text style={[styles.streakValue, { color: dark ? '#FAFBFF' : '#101628' }]}>{streak} day streak</Text>
-            <Text style={[styles.streakText, { color: dark ? '#AAB0BF' : '#626B80' }]}>You trained on 11 of the last 14 days.</Text>
-          </View>
+      <View style={styles.heatmapCard}>
+        <Text style={styles.heatmapTitle}>Yearly activity heatmap</Text>
+        <Text style={styles.heatmapSub}>Darker blocks = more movement magic</Text>
+        <View style={styles.heatGrid}>
+          {heat.map((column, colIndex) => (
+            <View key={`col-${colIndex}`} style={styles.column}>
+              {column.map((cell, rowIndex) => (
+                <View key={`cell-${colIndex}-${rowIndex}`} style={[styles.cell, { backgroundColor: intensity[cell] }]} />
+              ))}
+            </View>
+          ))}
         </View>
-      </SectionCard>
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  content: { paddingTop: 74, paddingHorizontal: 16, paddingBottom: 28 },
-  title: { fontSize: 32, fontWeight: '800' },
-  subtitle: { marginTop: 3, marginBottom: 16, fontSize: 15, fontWeight: '500' },
-  statRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderColor: '#E8EBF4',
-  },
-  statLabel: { fontSize: 15, fontWeight: '600' },
-  statValue: { marginLeft: 'auto', fontSize: 17, fontWeight: '800' },
-  streakCard: {
-    borderRadius: 16,
-    backgroundColor: '#FF9F0A1C',
-    padding: 14,
-    flexDirection: 'row',
-    gap: 10,
-    alignItems: 'center',
-  },
-  streakEmoji: { fontSize: 26 },
-  streakValue: { fontSize: 22, fontWeight: '800' },
-  streakText: { fontSize: 14, fontWeight: '500' },
+  container: { flex: 1, backgroundColor: '#FFF9EF' },
+  content: { paddingTop: 70, paddingHorizontal: 16, paddingBottom: 30, gap: 16 },
+  title: { fontSize: 33, fontWeight: '800', color: '#6E4A32' },
+  subtitle: { color: '#9A6B4A' },
+  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  statCard: { width: '48%', backgroundColor: '#FFFFFF', borderRadius: 20, borderWidth: 2, borderColor: '#FFE4BF', padding: 12, gap: 3 },
+  emoji: { fontSize: 24 },
+  value: { fontSize: 24, fontWeight: '800', color: '#6E4A32' },
+  label: { color: '#9A6B4A', fontWeight: '600' },
+  heatmapCard: { backgroundColor: '#FFFFFF', borderRadius: 22, borderWidth: 2, borderColor: '#FFE4BF', padding: 14 },
+  heatmapTitle: { fontSize: 19, fontWeight: '700', color: '#6E4A32' },
+  heatmapSub: { color: '#9A6B4A', marginBottom: 10 },
+  heatGrid: { flexDirection: 'row', gap: 5 },
+  column: { gap: 5 },
+  cell: { width: 18, height: 18, borderRadius: 5 },
 });

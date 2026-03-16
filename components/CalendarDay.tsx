@@ -1,7 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { WORKOUT_META, Workout } from '@/constants/workouts';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
 type Props = {
   dayNumber: number;
@@ -12,34 +11,34 @@ type Props = {
 };
 
 export function CalendarDay({ dayNumber, isCurrentMonth, isToday, workouts, onPress }: Props) {
-  const scheme = useColorScheme() ?? 'light';
-  const dark = scheme === 'dark';
-
-  const backgroundColor = isToday
-    ? dark
-      ? '#28398D'
-      : '#DEE6FF'
-    : dark
-      ? '#17181C'
-      : '#FFFFFF';
+  const dayTextColor = !isCurrentMonth ? '#6E6784' : isToday ? '#1A1131' : '#F7F1FF';
 
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [
         styles.cell,
-        {
-          backgroundColor,
-          borderColor: dark ? '#23262D' : '#E8E8EF',
-          opacity: pressed ? 0.8 : isCurrentMonth ? 1 : 0.45,
-        },
+        isCurrentMonth ? styles.currentMonthCell : styles.otherMonthCell,
+        isToday && styles.todayCell,
+        pressed && styles.pressed,
       ]}>
-      <Text style={[styles.dayLabel, { color: dark ? '#FAFAFC' : '#13151F' }]}>{dayNumber}</Text>
-      <View style={styles.dotRow}>
-        {workouts.slice(0, 4).map((workout) => (
-          <View key={workout.id} style={[styles.dot, { backgroundColor: WORKOUT_META[workout.type].color }]} />
-        ))}
-        {workouts.length > 4 ? <Text style={[styles.more, { color: dark ? '#B8BDCA' : '#666A78' }]}>+{workouts.length - 4}</Text> : null}
+      <Text style={[styles.dayLabel, { color: dayTextColor }]}>{dayNumber}</Text>
+
+      <View style={styles.indicatorRow}>
+        {workouts.slice(0, 3).map((workout) => {
+          const meta = WORKOUT_META[workout.type];
+          return (
+            <View key={workout.id} style={[styles.indicatorBubble, { backgroundColor: meta.color }]}>
+              <Text style={styles.indicatorEmoji}>{meta.emoji}</Text>
+            </View>
+          );
+        })}
+
+        {workouts.length > 3 ? (
+          <View style={styles.moreBubble}>
+            <Text style={styles.moreText}>+{workouts.length - 3}</Text>
+          </View>
+        ) : null}
       </View>
     </Pressable>
   );
@@ -47,30 +46,71 @@ export function CalendarDay({ dayNumber, isCurrentMonth, isToday, workouts, onPr
 
 const styles = StyleSheet.create({
   cell: {
-    width: '13.7%',
-    minHeight: 78,
+    width: '13.5%',
+    minHeight: 76,
     borderRadius: 16,
     borderWidth: 1,
-    padding: 8,
+    paddingTop: 8,
+    paddingHorizontal: 6,
+    paddingBottom: 7,
     justifyContent: 'space-between',
   },
-  dayLabel: {
-    fontSize: 14,
-    fontWeight: '700',
+  currentMonthCell: {
+    backgroundColor: '#21243B',
+    borderColor: '#2F3250',
+    opacity: 1,
   },
-  dotRow: {
+  otherMonthCell: {
+    backgroundColor: '#131624',
+    borderColor: '#222540',
+    opacity: 0.46,
+  },
+  todayCell: {
+    backgroundColor: '#F4C9FF',
+    borderColor: '#F7DCFF',
+    shadowColor: '#F4C9FF',
+    shadowOpacity: 0.55,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 6,
+  },
+  pressed: { opacity: 0.78 },
+  dayLabel: {
+    fontSize: 13,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  indicatorRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 5,
+    justifyContent: 'center',
+    gap: 3,
+    minHeight: 18,
+    alignItems: 'flex-end',
+  },
+  indicatorBubble: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  dot: {
-    width: 7,
-    height: 7,
-    borderRadius: 99,
+  indicatorEmoji: {
+    fontSize: 8,
+    lineHeight: 10,
   },
-  more: {
-    fontSize: 10,
-    fontWeight: '700',
+  moreBubble: {
+    minWidth: 14,
+    height: 14,
+    paddingHorizontal: 2,
+    borderRadius: 8,
+    backgroundColor: '#8F7AB8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  moreText: {
+    color: '#F9F5FF',
+    fontSize: 8,
+    fontWeight: '800',
   },
 });
