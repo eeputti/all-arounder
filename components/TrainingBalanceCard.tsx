@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
+import { Colors } from '@/constants/theme';
 import { WORKOUT_META, Workout, WorkoutType } from '@/constants/workouts';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -11,7 +12,7 @@ const TRACKED_TYPES: WorkoutType[] = ['run', 'tennis', 'gym', 'mobility'];
 
 export function TrainingBalanceCard({ workouts }: Props) {
   const scheme = useColorScheme() ?? 'light';
-  const dark = scheme === 'dark';
+  const palette = Colors[scheme];
 
   const counts = TRACKED_TYPES.map((type) => ({
     type,
@@ -29,11 +30,11 @@ export function TrainingBalanceCard({ workouts }: Props) {
           <View key={type} style={styles.row}>
             <View style={styles.left}>
               <View style={[styles.dot, { backgroundColor: meta.color }]} />
-              <Text style={[styles.label, { color: dark ? '#E8E9EF' : '#181925' }]}>{meta.label}</Text>
-              <Text style={[styles.count, { color: dark ? '#9EA2AE' : '#646A78' }]}>{count}</Text>
+              <Text style={[styles.label, { color: palette.text }]}>{meta.label}</Text>
+              <Text style={[styles.count, { color: palette.mutedText }]}>{count}</Text>
             </View>
-            <View style={[styles.track, { backgroundColor: dark ? '#252730' : '#ECEEF5' }]}>
-              <View style={[styles.fill, { backgroundColor: meta.color, width: `${Math.max(widthPct, 6)}%` }]} />
+            <View style={[styles.track, { backgroundColor: palette.surfaceMuted }]}>
+              <View style={[styles.fill, { backgroundColor: meta.color, width: `${Math.max(widthPct, 8)}%` }]} />
             </View>
           </View>
         );
@@ -44,7 +45,7 @@ export function TrainingBalanceCard({ workouts }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    gap: 10,
+    gap: 12,
   },
   row: {
     gap: 8,
@@ -61,7 +62,8 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
+    textTransform: 'capitalize',
   },
   count: {
     fontSize: 14,
@@ -69,7 +71,7 @@ const styles = StyleSheet.create({
     marginLeft: 'auto',
   },
   track: {
-    height: 8,
+    height: 9,
     borderRadius: 999,
     overflow: 'hidden',
   },
