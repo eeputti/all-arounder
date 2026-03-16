@@ -53,7 +53,8 @@ export default function CalendarScreen() {
 
   const selectedWorkouts = selectedDate ? workoutsByDate[selectedDate] ?? [] : [];
 
-  const monthTitle = selectedMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+    setEditingWorkoutId(null);
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -115,13 +116,69 @@ export default function CalendarScreen() {
         ))}
       </View>
 
-      <DayDetailsModal
-        visible={Boolean(selectedDate)}
-        selectedDate={selectedDate ?? ''}
-        workouts={selectedWorkouts}
-        onClose={() => setSelectedDate(null)}
-      />
-    </ScrollView>
+                          <View style={styles.actionsRow}>
+                            <Pressable
+                              style={styles.primaryAction}
+                              onPress={() => startEditing(workout)}
+                            >
+                              <Text style={styles.actionText}>Edit workout</Text>
+                            </Pressable>
+                            <Pressable
+                              style={styles.dangerAction}
+                              onPress={() => deleteWorkout(workout.id)}
+                            >
+                              <Text style={styles.actionText}>Delete</Text>
+                            </Pressable>
+                          </View>
+                        </>
+                      )}
+                    </View>
+                  );
+                })
+              )}
+
+              <View style={styles.addCard}>
+                <Text style={styles.addTitle}>Add new workout</Text>
+                <TextInput
+                  style={styles.input}
+                  value={newWorkout.title}
+                  onChangeText={(value) => setNewWorkout((current) => ({ ...current, title: value }))}
+                  placeholder="Workout"
+                  placeholderTextColor="#6e6e73"
+                />
+                <TextInput
+                  style={styles.input}
+                  value={newWorkout.duration}
+                  onChangeText={(value) =>
+                    setNewWorkout((current) => ({ ...current, duration: value }))
+                  }
+                  placeholder="Duration"
+                  placeholderTextColor="#6e6e73"
+                />
+                <TextInput
+                  style={styles.input}
+                  value={newWorkout.notes}
+                  onChangeText={(value) => setNewWorkout((current) => ({ ...current, notes: value }))}
+                  placeholder="Notes"
+                  placeholderTextColor="#6e6e73"
+                />
+                <TextInput
+                  style={styles.input}
+                  value={newWorkout.emoji}
+                  onChangeText={(value) => setNewWorkout((current) => ({ ...current, emoji: value }))}
+                  placeholder="Emoji"
+                  placeholderTextColor="#6e6e73"
+                />
+
+                <Pressable style={styles.primaryAction} onPress={addWorkout}>
+                  <Text style={styles.actionText}>Add workout</Text>
+                </Pressable>
+              </View>
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </View>
   );
 }
 
