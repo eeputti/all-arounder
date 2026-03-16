@@ -12,6 +12,47 @@ const weeklyMix = [
 const activeDays = new Set(workouts.map((workout) => workout.date));
 
 export default function HomeScreen() {
+  const scheme = useColorScheme() ?? 'light';
+  const dark = scheme === 'dark';
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const todayKey = getDateKey(today);
+  const weekStart = getWeekStart(today);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 6);
+
+  const workoutsSorted = [...MOCK_WORKOUTS].sort((a, b) => a.date.localeCompare(b.date));
+
+  const todayWorkouts = workoutsSorted.filter((workout) => workout.date === todayKey);
+
+  const upcomingWorkouts = workoutsSorted.filter((workout) => workout.date > todayKey).slice(0, 5);
+
+  const weeklyWorkouts = workoutsSorted.filter((workout) => {
+    const date = new Date(`${workout.date}T00:00:00`);
+    return date >= weekStart && date <= weekEnd;
+  });
+
+  const workoutTypeCounts = ALL_TYPES.map((type) => ({
+    type,
+    count: weeklyWorkouts.filter((workout) => workout.type === type).length,
+  }));
+
+  const totalSessions = weeklyWorkouts.length;
+  const movementSessions = weeklyWorkouts.filter((workout) => workout.type !== 'rest').length;
+  const movementMinutes = weeklyWorkouts.reduce((sum, workout) => sum + workout.duration, 0);
+  const activeDays = new Set(weeklyWorkouts.filter((workout) => workout.type !== 'rest').map((workout) => workout.date)).size;
+
+  const movementStreak = getMovementStreak(workoutsSorted, todayKey);
+
+  const topType = MOVEMENT_TYPES.map((type) => ({
+    type,
+    minutes: weeklyWorkouts
+      .filter((workout) => workout.type === type)
+      .reduce((sum, workout) => sum + workout.duration, 0),
+  })).sort((a, b) => b.minutes - a.minutes)[0];
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Hey mover 🌸</Text>

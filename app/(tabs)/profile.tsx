@@ -19,6 +19,15 @@ const stats = [
 ];
 
 export default function ProfileScreen() {
+  const scheme = useColorScheme() ?? 'light';
+  const dark = scheme === 'dark';
+
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const monthWorkouts = MOCK_WORKOUTS.filter((workout) => workout.date.slice(5, 7) === month);
+
+  const streak = 6;
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Cute stats corner</Text>
